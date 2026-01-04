@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Data Santri - DEISA</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+
+    <!-- Bootstrap Icons (offline) -->
+    <link rel="stylesheet" href="bootstrap-icons/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="top-navbar">
+        <h4 class="m-0">DEISA</h4>
+
+        <div class="d-flex align-items-center gap-3">
+            <span class="fw-semibold d-none d-md-inline">Admin</span>
+            <button class="btn btn-danger btn-sm d-none d-md-inline">
+                <i class="bi bi-box-arrow-right me-1"></i> Log Out
+            </button>
+
+            <!-- HAMBURGER -->
+            <button class="btn btn-primary d-md-none" id="btn-toggle">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+    </nav>
+
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <ul class="nav flex-column gap-2">
+
+            <li class="nav-item">
+                <a class="nav-link" href="dashboard.html">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="read.html">
+                    <i class="bi bi-people me-2"></i> Data Santri
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-building me-2"></i> Kelas
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-capsule-pill me-2"></i> Obat
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-file-earmark-text me-2"></i> Laporan
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <!-- PAGE HEADER -->
+        <div class="mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item">
+                        <a href="dashboard.html" class="text-decoration-none">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="read.html" class="text-decoration-none">Data Santri</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Edit Santri
+                    </li>
+                </ol>
+            </nav>
+
+            <h4 class="fw-bold mb-0">Edit Data Santri</h4>
+            <small class="text-muted">
+                Ubah dan perbarui data identitas santri sesuai kebutuhan
+            </small>
+        </div>
+
+        <!-- EDIT FORM -->
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="form-input-section">
+                    <h5 class="fw-bold mb-4">
+                        <i class="bi bi-pencil-square me-2 text-primary"></i> Form Edit Data
+                    </h5>
+
+                    <form id="formEditData">
+
+                        <!-- SANTRI SECTION -->
+                        <h6 class="fw-bold text-primary mb-3">Data Santri</h6>
+
+                        <!-- NIS -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">NIS</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person-badge"></i>
+                                </span>
+                                <input type="text" class="form-control" id="editNis" placeholder="Masukkan NIS"
+                                    required>
+                            </div>
+                        </div>
+
+                        <!-- NAMA -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nama Lengkap</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input type="text" class="form-control" id="editNamaSantri"
+                                    placeholder="Nama lengkap santri" required>
+                            </div>
+                        </div>
+
+                        <!-- JENIS KELAMIN -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Jenis Kelamin</label>
+                            <select class="form-select" id="editJenisKelamin" required>
+                                <option selected disabled>-- Pilih --</option>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
+                        </div>
+
+                        <!-- KELAS -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kelas</label>
+                            <select class="form-select" id="editKelas" required>
+                                <option selected disabled>-- Pilih Kelas --</option>
+                                <option value="Kelas 1">Kelas 1</option>
+                                <option value="Kelas 2">Kelas 2</option>
+                                <option value="Kelas 3">Kelas 3</option>
+                                <option value="Kelas 4">Kelas 4</option>
+                                <option value="Kelas 5">Kelas 5</option>
+                            </select>
+                        </div>
+
+                        <!-- TEMPAT LAHIR -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tempat Lahir</label>
+                            <input type="text" class="form-control" id="editTempatLahir" placeholder="Kota lahir"
+                                required>
+                        </div>
+
+                        <!-- TANGGAL LAHIR -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Tanggal Lahir</label>
+                            <input type="date" class="form-control" id="editTanggalLahir" required>
+                        </div>
+
+                        <hr>
+
+                        <!-- WALI SECTION -->
+                        <h6 class="fw-bold text-primary mb-3">Data Wali Santri</h6>
+
+                        <!-- NAMA WALI -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nama Lengkap Wali</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input type="text" class="form-control" id="editNamaWali"
+                                    placeholder="Nama lengkap wali" required>
+                            </div>
+                        </div>
+
+                        <!-- HUBUNGAN -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Hubungan dengan Santri</label>
+                            <select class="form-select" id="editHubungan" required>
+                                <option selected disabled>-- Pilih Hubungan --</option>
+                                <option value="Ayah">Ayah</option>
+                                <option value="Ibu">Ibu</option>
+                                <option value="Wali">Wali</option>
+                            </select>
+                        </div>
+
+                        <!-- NOMOR HP -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nomor HP Wali</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-telephone"></i>
+                                </span>
+                                <input type="tel" class="form-control" id="editNomorHp" placeholder="08xx xxxx xxxx"
+                                    required>
+                            </div>
+                        </div>
+
+                        <!-- ALAMAT -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Alamat</label>
+                            <textarea class="form-control" id="editAlamat" rows="3" placeholder="Alamat rumah wali"
+                                required></textarea>
+                        </div>
+
+                        <!-- BUTTON -->
+                        <div class="d-flex justify-content-between gap-2">
+                            <a href="read.html" class="btn btn-secondary flex-grow-1">
+                                <i class="bi bi-arrow-left me-1"></i> Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-save me-1"></i> Simpan Perubahan
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL - VIEW DETAIL -->
+    <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-eye me-2"></i> Detail Data Santri
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalDetailContent">
+                    <!-- Content will be filled by JS -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ===============================
+           EDIT PAGE FUNCTIONALITY
+        ================================ */
+        let dataList = JSON.parse(localStorage.getItem('dataSantri')) || [];
+        let editIndex = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initSidebarToggle('btn-toggle', 'sidebar');
+            // You can add URL parameter handling here to load specific data
+            setupFormHandlers();
+        });
+
+        /* ===============================
+           SIDEBAR TOGGLE
+        ================================ */
+        function initSidebarToggle(buttonId, sidebarId, activeClass = 'active') {
+            const button = document.getElementById(buttonId);
+            const sidebar = document.getElementById(sidebarId);
+
+            if (!button || !sidebar) return;
+
+            button.addEventListener('click', () => {
+                sidebar.classList.toggle(activeClass);
+            });
+        }
+
+        /* ===============================
+           FORM HANDLERS
+        ================================ */
+        function setupFormHandlers() {
+            document.getElementById('formEditData').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveEditedData();
+            });
+        }
+
+        // Load data for editing - you can call this with an index
+        function loadDataForEdit(index) {
+            if (index < 0 || index >= dataList.length) {
+                showAlert('Data tidak ditemukan!', 'danger');
+                return;
+            }
+
+            editIndex = index;
+            const data = dataList[index];
+
+            document.getElementById('editNis').value = data.nis;
+            document.getElementById('editNamaSantri').value = data.namaSantri;
+            document.getElementById('editJenisKelamin').value = data.jenisKelamin;
+            document.getElementById('editKelas').value = data.kelas;
+            document.getElementById('editTempatLahir').value = data.tempatLahir;
+            document.getElementById('editTanggalLahir').value = data.tanggalLahir;
+            document.getElementById('editNamaWali').value = data.namaWali;
+            document.getElementById('editHubungan').value = data.hubungan;
+            document.getElementById('editNomorHp').value = data.nomorHp;
+            document.getElementById('editAlamat').value = data.alamat;
+        }
+
+        function getEditFormData() {
+            return {
+                nis: document.getElementById('editNis').value,
+                namaSantri: document.getElementById('editNamaSantri').value,
+                jenisKelamin: document.getElementById('editJenisKelamin').value,
+                kelas: document.getElementById('editKelas').value,
+                tempatLahir: document.getElementById('editTempatLahir').value,
+                tanggalLahir: document.getElementById('editTanggalLahir').value,
+                namaWali: document.getElementById('editNamaWali').value,
+                hubungan: document.getElementById('editHubungan').value,
+                nomorHp: document.getElementById('editNomorHp').value,
+                alamat: document.getElementById('editAlamat').value
+            };
+        }
+
+        function saveEditedData() {
+            if (editIndex === null) {
+                showAlert('Tidak ada data yang dipilih untuk diedit!', 'danger');
+                return;
+            }
+
+            const updatedData = getEditFormData();
+            dataList[editIndex] = updatedData;
+            localStorage.setItem('dataSantri', JSON.stringify(dataList));
+            showAlert('Data berhasil diperbarui!', 'success');
+
+            // Redirect back to read page after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'read.html';
+            }, 2000);
+        }
+
+        function viewDetail(index) {
+            const data = dataList[index];
+            const content = `
+                <div class="detail-row">
+                    <div class="detail-label">Nama Santri</div>
+                    <div class="detail-value">${data.namaSantri}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">NIS</div>
+                    <div class="detail-value">${data.nis}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Jenis Kelamin</div>
+                    <div class="detail-value">${data.jenisKelamin}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Kelas</div>
+                    <div class="detail-value">${data.kelas}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Tempat & Tanggal Lahir</div>
+                    <div class="detail-value">${data.tempatLahir}, ${formatDate(data.tanggalLahir)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Nama Wali</div>
+                    <div class="detail-value">${data.namaWali}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Hubungan</div>
+                    <div class="detail-value">${data.hubungan}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Nomor HP</div>
+                    <div class="detail-value">${data.nomorHp}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Alamat</div>
+                    <div class="detail-value">${data.alamat}</div>
+                </div>
+            `;
+
+            document.getElementById('modalDetailContent').innerHTML = content;
+            new bootstrap.Modal(document.getElementById('modalDetail')).show();
+        }
+
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+            const content = document.querySelector('.content');
+            content.insertBefore(alertDiv, content.firstChild);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+    </script>
+
+</body>
+
+</html>

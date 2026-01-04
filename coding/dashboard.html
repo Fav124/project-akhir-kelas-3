@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+
+    <!-- Bootstrap Icons (offline) -->
+    <link rel="stylesheet" href="bootstrap-icons/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="top-navbar">
+        <h4 class="m-0">DEISA</h4>
+
+        <div class="d-flex align-items-center gap-3">
+            <span class="fw-semibold d-none d-md-inline">Admin</span>
+            <button class="btn btn-danger btn-sm d-none d-md-inline">
+                <i class="bi bi-box-arrow-right me-1"></i> Log Out
+            </button>
+
+            <!-- HAMBURGER -->
+            <button class="btn btn-primary d-md-none" id="btn-toggle">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+    </nav>
+
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <ul class="nav flex-column gap-2">
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="read.html">
+                    <i class="bi bi-people me-2"></i> Data Santri
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-building me-2"></i> Kelas
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-capsule-pill me-2"></i> Obat
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-file-earmark-text me-2"></i> Laporan
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <!-- Jumbotron -->
+        <div class="jumbotron-hero mb-4 shadow-sm rounded-3">
+            <div class="hero-overlay"></div>
+
+            <div class="container-fluid p-4 hero-content">
+                <h1 class="display-5 fw-bold text-white">Selamat Datang, Admin!</h1>
+                <p class="col-md-8 fs-5 text-white">
+                    Semoga harimu menyenangkan dan pekerjaanmu lancar hari ini.
+                </p>
+                <button class="btn btn-primary btn-lg" type="button">
+                    Mulai Kelola Data
+                </button>
+            </div>
+        </div>
+
+
+        <!-- STAT CARDS -->
+        <div class="row g-4 mt-2">
+
+            <div class="col-md-3">
+                <div class="card stat-card shadow-sm p-3">
+                    <h5 class="fw-bold mb-1">Total Santri</h5>
+                    <h2 class="fw-bold text-primary">1</h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card stat-card shadow-sm p-3">
+                    <h5 class="fw-bold mb-1">Total Kelas</h5>
+                    <h2 class="fw-bold text-primary">5</h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card stat-card shadow-sm p-3">
+                    <h5 class="fw-bold mb-1">Total Obat</h5>
+                    <h2 class="fw-bold text-primary">12</h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card stat-card shadow-sm p-3">
+                    <h5 class="fw-bold mb-1">Laporan Bulan Ini</h5>
+                    <h2 class="fw-bold text-primary">3</h2>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Bootstrap JS -->
+    <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Sidebar Toggle -->
+    <script>
+        const btn = document.getElementById('btn-toggle');
+        const sidebar = document.getElementById('sidebar');
+
+        btn.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+    </script>
+
+</body>
+
+</html>
