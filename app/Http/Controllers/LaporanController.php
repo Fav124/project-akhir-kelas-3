@@ -156,20 +156,97 @@ class LaporanController extends Controller
     /**
      * Generate PDF of report (fallback: return same HTML view)
      */
+    /**
+     * Generate PDF of report
+     */
     public function reportPdf(Request $request)
     {
-        // reuse report logic by calling report() and capturing variables
-        $response = $this->report($request);
-        // If barryvdh/laravel-dompdf is installed, render PDF
-        if (class_exists('\Barryvdh\DomPDF\Facade')) {
-            $html = View::make('laporan.report', $response->getData())->render();
-            $pdf = \Barryvdh\DomPDF\Facade::loadHTML($html);
-            return $pdf->stream('laporan.pdf');
+        // Get data using the same logic as report()
+        // We can't reuse report() directly because it returns a View or response
+        // So we duplicate the data fetching logic for now or extract it.
+        // For simplicity and to avoid major refactor risk now, I will duplicate the data fetching logic.
+        
+        $period = $request->get('period', 'this_month');
+        $start = null;
+        $end = null;
+
+        if ($period === 'this_year') {
+            $start = Carbon::now()->startOfYear();
+            $end = Carbon::now()->endOfYear();
+        } elseif ($period === 'this_month') {
+            $start = Carbon::now()->startOfMonth();
+            $end = Carbon::now()->endOfMonth();
+        } elseif ($period === 'custom') {
+            $sd = $request->get('start_date');
+            $ed = $request->get('end_date');
+            if ($sd && $ed) {
+                $start = Carbon::parse($sd)->startOfDay();
+                $end = Carbon::parse($ed)->endOfDay();
+            }
         }
 
-        // fallback: return the HTML view with a header to download as file
-        return $response->withHeaders([
-            'Content-Type' => 'text/html'
-        ]);
+        // Defaults if no dates
+        if (!$start) $start = Carbon::now()->startOfMonth();
+        if (!$end) $end = Carbon::now()->endOfMonth();
+
+        // 1) jumlah santri yang sakit (unique santri count)
+        $sakitQuery = DB::table('sakit_santris')
+            ->whereBetween('tanggal_mulai_sakit', [$start->toDateString(), $end->toDateString()]);
+            
+        $uniqueSantriCount = (clone $sakitQuery)->distinct()->count('santri_id');
+
+        // 2) top obat yang dipakai
+        $topObats = [];
+        $pivotTable = 'sakit_santri_obat';
+        if (Schema::hasTable($pivotTable)) {
+            $topObats = DB::table($pivotTable)
+                ->join('obats', 'obats.id', '=', "$pivotTable.obat_id")
+                ->join('sakit_santris', 'sakit_santris.id', '=', "$pivotTable.sakit_santri_id")
+                ->select('obats.id', 'obats.nama_obat', DB::raw('SUM(' . $pivotTable . '.jumlah) as total_jumlah'))
+                ->whereBetween('sakit_santris.tanggal_mulai_sakit', [$start->toDateString(), $end->toDateString()])
+                ->groupBy('obats.id', 'obats.nama_obat')
+                ->orderByDesc('total_jumlah')
+                ->limit(10)
+                ->get();
+        }
+
+        // 3) santri yang paling sering sakit
+        $topSantri = DB::table('sakit_santris')
+            ->select('santri_id', DB::raw('COUNT(*) as times_sick'))
+            ->whereBetween('tanggal_mulai_sakit', [$start->toDateString(), $end->toDateString()])
+            ->groupBy('santri_id')
+            ->orderByDesc('times_sick')
+            ->limit(10)
+            ->get();
+
+        // Load names & class
+        $santriIds = $topSantri->pluck('santri_id')->all();
+        $santris = DB::table('santris')
+            ->leftJoin('kelas', 'santris.kelas_id', '=', 'kelas.id')
+            ->whereIn('santris.id', $santriIds)
+            ->select('santris.id', 'santris.nama_lengkap', 'kelas.nama_kelas')
+            ->get()
+            ->keyBy('id');
+
+        $topSantri = $topSantri->map(function ($r) use ($santris) {
+            $s = $santris->get($r->santri_id);
+            return [
+                'santri_id' => $r->santri_id,
+                'nama' => $s ? $s->nama_lengkap : 'N/A',
+                'kelas' => $s ? $s->nama_kelas : '-',
+                'times_sick' => $r->times_sick
+            ];
+        });
+
+        $data = compact('uniqueSantriCount', 'topObats', 'topSantri', 'start', 'end', 'period');
+
+        // Render PDF
+        if (class_exists('\Barryvdh\DomPDF\Facade')) {
+            $pdf = \Barryvdh\DomPDF\Facade::loadView('laporan.pdf', $data);
+            return $pdf->stream('laporan-santri-' . now()->format('YmdHis') . '.pdf');
+        }
+
+        // fallback if dompdf is not installed, return view
+        return view('laporan.pdf', $data);
     }
 }

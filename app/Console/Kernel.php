@@ -15,7 +15,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('obat:check-expiry 30')->dailyAt('08:00');
+        $schedule->command('obat:check-stock')->dailyAt('08:00');
     }
 
     /**

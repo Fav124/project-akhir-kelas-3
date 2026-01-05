@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Obat extends Model
 {
@@ -17,37 +18,124 @@ class Obat extends Model
         'deskripsi',
         'stok',
         'satuan',
-        'stok_minimum', // Tambahan untuk alert stok menipis
-        'harga_satuan'  // Tambahan untuk tracking harga
+        'stok_minimum',
+        'harga_satuan',
+        'tanggal_kadaluarsa'
     ];
 
     protected $casts = [
         'stok' => 'integer',
         'stok_minimum' => 'integer',
-        'harga_satuan' => 'decimal:2'
+        'harga_satuan' => 'decimal:2',
+        'tanggal_kadaluarsa' => 'date'
     ];
 
-    // Relasi many-to-many dengan sakit_santri
+    /**
+     * Relasi many-to-many dengan sakit_santri
+     */
     public function sakitSantris()
     {
         return $this->belongsToMany(SakitSantri::class, 'sakit_santri_obat')
-            ->withPivot('jumlah', 'dosis', 'keterangan')
+            ->withPivot('jumlah', 'dosis', 'tujuan', 'keterangan')
             ->withTimestamps();
     }
 
-    // Check if stock is low
-    public function isStockLow()
+    /**
+     * Get purchase history for this obat
+     */
+    public function histories()
+    {
+        return $this->hasMany(ObatHistory::class);
+    }
+
+    /**
+     * Check if stock is low
+     */
+    public function isStockLow(): bool
     {
         return $this->stok <= $this->stok_minimum;
     }
 
-    // Reduce stock
-    public function reduceStock($amount)
+    /**
+     * Check if obat is expiring soon (within 30 days)
+     */
+    public function isExpiringSoon(): bool
+    {
+        if (!$this->tanggal_kadaluarsa) {
+            return false;
+        }
+        $thirtyDaysFromNow = Carbon::now()->addDays(30);
+        return $this->tanggal_kadaluarsa->lte($thirtyDaysFromNow) && $this->tanggal_kadaluarsa->gte(Carbon::now());
+    }
+
+    /**
+     * Check if obat is expired
+     */
+    public function isExpired(): bool
+    {
+        if (!$this->tanggal_kadaluarsa) {
+            return false;
+        }
+        return $this->tanggal_kadaluarsa->lt(Carbon::now());
+    }
+
+    /**
+     * Scope to get expiring medicines (within days)
+     */
+    public function scopeExpiringSoon($query, $days = 30)
+    {
+        return $query->whereNotNull('tanggal_kadaluarsa')
+            ->whereBetween('tanggal_kadaluarsa', [
+                Carbon::now()->toDateString(),
+                Carbon::now()->addDays($days)->toDateString()
+            ]);
+    }
+
+    /**
+     * Scope to get expired medicines
+     */
+    public function scopeExpired($query)
+    {
+        return $query->whereNotNull('tanggal_kadaluarsa')
+            ->where('tanggal_kadaluarsa', '<', Carbon::now()->toDateString());
+    }
+
+    /**
+     * Scope to get low stock medicines
+     */
+    public function scopeLowStock($query)
+    {
+        return $query->whereRaw('stok <= stok_minimum');
+    }
+
+    /**
+     * Reduce stock
+     */
+    public function reduceStock($amount): bool
     {
         if ($this->stok >= $amount) {
             $this->decrement('stok', $amount);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Add stock
+     */
+    public function addStock($amount): void
+    {
+        $this->increment('stok', $amount);
+    }
+
+    /**
+     * Get foto URL
+     */
+    public function getFotoUrlAttribute(): ?string
+    {
+        if ($this->foto) {
+            return asset('storage/' . $this->foto);
+        }
+        return null;
     }
 }

@@ -22,6 +22,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'foto',
+        'phone',
         'is_admin',
         'active'
     ];
@@ -45,4 +47,39 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_admin' => 'boolean',
     ];
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin' || $this->is_admin === true;
+    }
+
+    /**
+     * Check if user is regular user
+     */
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
+
+    /**
+     * Get all sakit records entered by this user (as petugas)
+     */
+    public function sakitSantris()
+    {
+        return $this->hasMany(SakitSantri::class, 'user_id');
+    }
+
+    /**
+     * Get foto URL
+     */
+    public function getFotoUrlAttribute(): ?string
+    {
+        if ($this->foto) {
+            return asset('storage/' . $this->foto);
+        }
+        return null;
+    }
 }

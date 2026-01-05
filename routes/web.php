@@ -6,7 +6,9 @@ use App\Http\Controllers\{
     KelasController,
     SakitController,
     ObatController,
-    LaporanController
+    LaporanController,
+    UserController,
+    JurusanController
 };
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +23,35 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 // Dashboard
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('coba', [DashboardController::class, 'coba'])->name('coba');
+
+/*
+|--------------------------------------------------------------------------
+| USER MANAGEMENT (Admin Only)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('users')->name('users.')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/', [UserController::class, 'index'])->name('index');
+    Route::get('/create', [UserController::class, 'create'])->name('create');
+    Route::post('/', [UserController::class, 'store'])->name('store');
+    Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
+    Route::put('/{user}', [UserController::class, 'update'])->name('update');
+    Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
+    Route::post('/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('toggleActive');
+});
+
+/*
+|--------------------------------------------------------------------------
+| JURUSAN
+|--------------------------------------------------------------------------
+*/
+Route::prefix('jurusan')->name('jurusan.')->middleware('auth')->group(function () {
+    Route::get('/', [JurusanController::class, 'index'])->name('index');
+    Route::get('/create', [JurusanController::class, 'create'])->name('create');
+    Route::post('/', [JurusanController::class, 'store'])->name('store');
+    Route::get('/{jurusan}/edit', [JurusanController::class, 'edit'])->name('edit');
+    Route::put('/{jurusan}', [JurusanController::class, 'update'])->name('update');
+    Route::delete('/{jurusan}', [JurusanController::class, 'destroy'])->name('destroy');
+});
 
 /*
 |--------------------------------------------------------------------------
