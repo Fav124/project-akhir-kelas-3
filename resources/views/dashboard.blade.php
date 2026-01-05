@@ -1,387 +1,175 @@
 @extends('layouts.master')
+
+@section('title', 'Dashboard - Deisa')
+
 @section('content')
-    <!-- Jumbotron -->
-    <div class="jumbotron-hero mb-4 shadow-sm rounded-3">
-        <div class="hero-overlay"></div>
+<div class="rounded-2xl bg-surface-dark relative overflow-hidden mb-8 shadow-md">
+    <div class="absolute inset-0 z-0">
+        <div class="w-full h-full bg-cover bg-center opacity-40 mix-blend-overlay" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAM1InwB68-F8Wj0tIHpv8UtU7PxEfjE6yUQawBU57mleT9e16Y0s52W9UTuNsch3H8X-mRzntrX9W3sSFKKP6F9Ie6epBu4vwLxEI4xfFcHg13uLAQVVYSTA3AcOYbHxMk9t48W_-8Gh1_BoqtMUONp9TNvG4q-U20KlWLabqlOxmRs5e2R72CE4RTQN1NKpzYX6k_pzL5JUXtpakcw-RU1b2WghvUd-HGlfMKo5dK1HPYmohDGWNjECLy8uPnKjAsMEMcAtlAMdWe");'></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-surface-dark via-surface-dark/90 to-transparent"></div>
+    </div>
+    <div class="relative z-10 p-8 sm:p-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div>
+            <h2 class="text-3xl font-bold text-white mb-2">Selamat Datang, {{ Auth::user()->name }}!</h2>
+            <p class="text-gray-300 max-w-xl">Ini adalah ringkasan harian kesehatan santri di Pondok Pesantren Deisa. Pantau santri sakit dan inventaris obat dengan efektif.</p>
+        </div>
+        <a href="{{ route('sakit.create') }}" class="bg-primary hover:bg-green-400 text-surface-dark font-bold py-3 px-6 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 flex items-center gap-2">
+            <span class="material-symbols-outlined">add_circle</span>
+            Input Sakit Baru
+        </a>
+    </div>
+</div>
 
-        <div class="container-fluid p-4 hero-content">
-            <h1 class="display-5 fw-bold text-white">Selamat Datang, {{ auth()->user()->name }}!</h1>
-            <p class="col-md-8 fs-5 text-white">
-                Kelola data santri, kelas, obat, dan laporan dengan mudah.
-            </p>
-            <a href="{{ route('santri.index') }}" class="btn btn-primary btn-lg">
-                <i class="bi bi-arrow-right me-2"></i> Mulai Kelola Data
-            </a>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+            <div class="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                <span class="material-symbols-outlined">groups</span>
+            </div>
+            <span class="text-xs font-medium text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">Aktif</span>
+        </div>
+        <div class="mt-auto">
+            <p class="text-sm font-medium text-text-muted">Total Santri</p>
+            <h3 class="text-3xl font-bold text-text-main dark:text-white">{{ $totalSantri }}</h3>
+        </div>
+    </div>
+    <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+            <div class="p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400">
+                <span class="material-symbols-outlined">school</span>
+            </div>
+        </div>
+        <div class="mt-auto">
+            <p class="text-sm font-medium text-text-muted">Total Kelas</p>
+            <h3 class="text-3xl font-bold text-text-main dark:text-white">{{ $totalKelas }}</h3>
+        </div>
+    </div>
+    
+    <!-- Obat Alert Card -->
+    <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+            <div class="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
+                <span class="material-symbols-outlined">medication</span>
+            </div>
+            @if($obatStokRendah > 0)
+            <span class="text-xs font-medium text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-full">Low Stock: {{ $obatStokRendah }}</span>
+            @endif
+        </div>
+        <div class="mt-auto">
+            <p class="text-sm font-medium text-text-muted">Total Jenis Obat</p>
+            <h3 class="text-3xl font-bold text-text-main dark:text-white">{{ $totalObat }}</h3>
+            @if($obatKadaluarsa > 0)
+            <p class="text-xs text-orange-500 mt-1">{{ $obatKadaluarsa }} obat mendekati expired</p>
+            @endif
         </div>
     </div>
 
-    <!-- ALERT CARDS -->
-    @if($obatKadaluarsa > 0 || $obatStokRendah > 0 || $obatExpired > 0)
-    <div class="row g-3 mb-4">
-        @if($obatExpired > 0)
-        <div class="col-md-4">
-            <div class="alert alert-danger mb-0 d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
-                <div>
-                    <strong>{{ $obatExpired }} obat sudah kadaluarsa!</strong>
-                    <br><small>Segera tarik dari peredaran</small>
-                </div>
+    <!-- Sakit Card -->
+    <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col relative overflow-hidden">
+        @if($santriSedangSakit > 0)
+        <div class="absolute right-0 top-0 p-24 bg-red-500/5 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
+        @endif
+        <div class="flex items-center justify-between mb-4 relative z-10">
+            <div class="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500">
+                <span class="material-symbols-outlined">sick</span>
             </div>
         </div>
-        @endif
+        <div class="mt-auto relative z-10">
+            <p class="text-sm font-medium text-text-muted">Santri Sakit (Aktif)</p>
+            <h3 class="text-3xl font-bold text-text-main dark:text-white">{{ $santriSedangSakit }}</h3>
+            <p class="text-xs text-text-muted mt-1">+{{ $sakitHariIni }} baru hari ini</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Top 5 Santri Sakit List -->
+    <div class="lg:col-span-2 bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-text-main dark:text-white">Top 5 Santri Sering Sakit</h3>
+                <p class="text-sm text-text-muted">Berdasarkan data bulan ini</p>
+            </div>
+        </div>
         
-        @if($obatKadaluarsa > 0)
-        <div class="col-md-4">
-            <div class="alert alert-warning mb-0 d-flex align-items-center">
-                <i class="bi bi-clock-history fs-4 me-3"></i>
-                <div>
-                    <strong>{{ $obatKadaluarsa }} obat mendekati kadaluarsa</strong>
-                    <br><small>Akan expired dalam 30 hari</small>
-                </div>
-            </div>
-        </div>
-        @endif
-        
-        @if($obatStokRendah > 0)
-        <div class="col-md-4">
-            <div class="alert alert-info mb-0 d-flex align-items-center">
-                <i class="bi bi-box-seam fs-4 me-3"></i>
-                <div>
-                    <strong>{{ $obatStokRendah }} obat stok rendah</strong>
-                    <br><small>Segera lakukan restok</small>
-                </div>
-            </div>
-        </div>
-        @endif
-    </div>
-    @endif
-
-    <!-- STAT CARDS -->
-    <div class="row g-4 mt-2">
-
-        <div class="col-md-3">
-            <div class="card stat-card shadow-sm p-3">
-                <h5 class="fw-bold mb-1">
-                    <i class="bi bi-people me-2"></i> Total Santri
-                </h5>
-                <h2 class="fw-bold text-primary">{{ $totalSantri }}</h2>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stat-card shadow-sm p-3">
-                <h5 class="fw-bold mb-1">
-                    <i class="bi bi-building me-2"></i> Total Kelas
-                </h5>
-                <h2 class="fw-bold text-primary">{{ $totalKelas }}</h2>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stat-card shadow-sm p-3">
-                <h5 class="fw-bold mb-1">
-                    <i class="bi bi-capsule-pill me-2"></i> Total Obat
-                </h5>
-                <h2 class="fw-bold text-primary">{{ $totalObat }}</h2>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card stat-card shadow-sm p-3 border-danger">
-                <h5 class="fw-bold mb-1">
-                    <i class="bi bi-heart-pulse me-2 text-danger"></i> Santri Sakit
-                </h5>
-                <h2 class="fw-bold text-danger">{{ $santriSedangSakit }}</h2>
-                <small class="text-muted">{{ $sakitHariIni }} hari ini</small>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="row g-4 mt-2">
-        <!-- Top 5 Santri Sering Sakit -->
-        <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h6 class="fw-bold mb-0">
-                        <i class="bi bi-graph-up-arrow text-danger me-2"></i>
-                        Top 5 Santri Sering Sakit (Bulan Ini)
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    @if($topSantriSakit->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Santri</th>
-                                    <th>Kelas</th>
-                                    <th class="text-center">Jumlah</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($topSantriSakit as $item)
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            @if($item->foto)
-                                            <img src="{{ asset('storage/' . $item->foto) }}" class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
-                                            @else
-                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                                <i class="bi bi-person text-white small"></i>
-                                            </div>
-                                            @endif
-                                            {{ $item->nama_lengkap }}
-                                        </div>
-                                    </td>
-                                    <td>{{ $item->nama_kelas ?? '-' }}</td>
-                                    <td class="text-center">
-                                        <span class="badge bg-danger">{{ $item->sakit_count }}x</span>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @else
-                    <div class="text-center text-muted py-4">
-                        <i class="bi bi-emoji-smile fs-1 d-block mb-2"></i>
-                        Tidak ada data sakit bulan ini
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- Obat Mendekati Kadaluarsa -->
-        <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h6 class="fw-bold mb-0">
-                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
-                        Obat Mendekati Kadaluarsa
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    @if($obatMendekatiKadaluarsa->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Nama Obat</th>
-                                    <th>Stok</th>
-                                    <th>Kadaluarsa</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($obatMendekatiKadaluarsa as $obat)
-                                <tr>
-                                    <td>{{ $obat->nama_obat }}</td>
-                                    <td>{{ $obat->stok }} {{ $obat->satuan }}</td>
-                                    <td>
-                                        <span class="badge bg-warning text-dark">
-                                            {{ $obat->tanggal_kadaluarsa->format('d M Y') }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @else
-                    <div class="text-center text-muted py-4">
-                        <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
-                        Semua obat masih aman
-                    </div>
-                    @endif
-                </div>
-            </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="text-xs text-text-muted uppercase bg-gray-50 dark:bg-gray-800/50">
+                    <tr>
+                        <th class="px-4 py-3 rounded-l-lg">Santri</th>
+                        <th class="px-4 py-3">Kelas</th>
+                        <th class="px-4 py-3 rounded-r-lg text-center">Jumlah Sakit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($topSantriSakit as $item)
+                    <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                        <td class="px-4 py-3 font-medium text-text-main dark:text-white flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                {{ substr($item->nama_lengkap, 0, 1) }}
+                            </div>
+                            {{ $item->nama_lengkap }}
+                        </td>
+                        <td class="px-4 py-3 text-text-muted">{{ $item->nama_kelas ?? '-' }}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {{ $item->sakit_count }}x
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" class="px-4 py-6 text-center text-text-muted">Belum ada data bulan ini</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="row g-4 mt-2">
-        <!-- Obat Stok Rendah -->
-        <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h6 class="fw-bold mb-0">
-                        <i class="bi bi-box-seam text-info me-2"></i>
-                        Obat Stok Rendah
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    @if($obatStokRendahList->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Nama Obat</th>
-                                    <th>Stok</th>
-                                    <th>Minimum</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($obatStokRendahList as $obat)
-                                <tr>
-                                    <td>{{ $obat->nama_obat }}</td>
-                                    <td>
-                                        <span class="badge bg-danger">{{ $obat->stok }} {{ $obat->satuan }}</span>
-                                    </td>
-                                    <td>{{ $obat->stok_minimum }} {{ $obat->satuan }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+    <!-- Quick Actions -->
+    <div class="lg:col-span-1">
+        <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm h-full">
+            <h3 class="text-lg font-bold text-text-main dark:text-white mb-6">Aksi Cepat</h3>
+            <div class="flex flex-col gap-3">
+                <a href="{{ route('santri.create') }}" class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:border-primary hover:bg-primary/5 transition-all group text-left">
+                    <div class="p-2 rounded-lg bg-surface-light dark:bg-surface-dark shadow-sm text-primary group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined">add_circle</span>
                     </div>
-                    @else
-                    <div class="text-center text-muted py-4">
-                        <i class="bi bi-check-circle fs-1 d-block mb-2 text-success"></i>
-                        Semua stok aman
+                    <div>
+                        <h4 class="font-bold text-sm text-text-main dark:text-white">Tambah Santri</h4>
+                        <p class="text-xs text-text-muted">Register santri baru</p>
                     </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- Record Sakit Terbaru -->
-        <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">
-                        <i class="bi bi-clock-history text-primary me-2"></i>
-                        Record Sakit Terbaru
-                    </h6>
-                    <a href="{{ route('sakit.index') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
-                </div>
-                <div class="card-body p-0">
-                    @if($recentSakit->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Santri</th>
-                                    <th>Diagnosis</th>
-                                    <th>Tanggal</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($recentSakit as $sakit)
-                                <tr>
-                                    <td>{{ $sakit->santri->nama_lengkap ?? '-' }}</td>
-                                    <td>{{ Str::limit($sakit->diagnosis, 20) }}</td>
-                                    <td>{{ $sakit->tanggal_mulai_sakit?->format('d/m/Y') }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ $sakit->status_badge }}">
-                                            {{ ucfirst($sakit->status) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                </a>
+                <a href="{{ route('sakit.create') }}" class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:border-primary hover:bg-primary/5 transition-all group text-left">
+                    <div class="p-2 rounded-lg bg-surface-light dark:bg-surface-dark shadow-sm text-red-500 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined">medical_services</span>
                     </div>
-                    @else
-                    <div class="text-center text-muted py-4">
-                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                        Belum ada data
+                    <div>
+                        <h4 class="font-bold text-sm text-text-main dark:text-white">Input Sakit</h4>
+                        <p class="text-xs text-text-muted">Catat keluhan kesehatan</p>
                     </div>
-                    @endif
-                </div>
+                </a>
+                <a href="{{ route('obat.index') }}" class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:border-primary hover:bg-primary/5 transition-all group text-left">
+                    <div class="p-2 rounded-lg bg-surface-light dark:bg-surface-dark shadow-sm text-purple-500 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined">inventory</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-text-main dark:text-white">Cek Stok Obat</h4>
+                        <p class="text-xs text-text-muted">Update inventory</p>
+                    </div>
+                </a>
+                <a href="{{ route('laporan.report') }}" class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:border-primary hover:bg-primary/5 transition-all group text-left">
+                    <div class="p-2 rounded-lg bg-surface-light dark:bg-surface-dark shadow-sm text-orange-500 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined">print</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-text-main dark:text-white">Cetak Laporan</h4>
+                        <p class="text-xs text-text-muted">Generate laporan bulanan</p>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
-
-    <!-- QUICK ACTIONS -->
-    <div class="row g-4 mt-4">
-        <div class="col-12">
-            <h5 class="fw-bold mb-3">Akses Cepat</h5>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">
-                        <i class="bi bi-people text-primary me-2"></i> Data Santri
-                    </h6>
-                    <p class="text-muted small mb-3">Kelola data santri dan informasi pribadi mereka</p>
-                    <a href="{{ route('santri.index') }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-arrow-right me-1"></i> Buka
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">
-                        <i class="bi bi-heart-pulse text-danger me-2"></i> Santri Sakit
-                    </h6>
-                    <p class="text-muted small mb-3">Lihat dan kelola data kesehatan santri</p>
-                    <a href="{{ route('sakit.index') }}" class="btn btn-sm btn-danger">
-                        <i class="bi bi-arrow-right me-1"></i> Buka
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">
-                        <i class="bi bi-capsule-pill text-success me-2"></i> Kelola Obat
-                    </h6>
-                    <p class="text-muted small mb-3">Kelola stok dan data obat</p>
-                    <a href="{{ route('obat.index') }}" class="btn btn-sm btn-success">
-                        <i class="bi bi-arrow-right me-1"></i> Buka
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">
-                        <i class="bi bi-file-earmark-bar-graph text-info me-2"></i> Laporan
-                    </h6>
-                    <p class="text-muted small mb-3">Lihat laporan dan export PDF</p>
-                    <a href="{{ route('laporan.report') }}" class="btn btn-sm btn-info">
-                        <i class="bi bi-arrow-right me-1"></i> Buka
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        @if(auth()->user()->isAdmin())
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">
-                        <i class="bi bi-person-gear text-warning me-2"></i> Manajemen User
-                    </h6>
-                    <p class="text-muted small mb-3">Kelola user dan hak akses</p>
-                    <a href="{{ route('users.index') }}" class="btn btn-sm btn-warning">
-                        <i class="bi bi-arrow-right me-1"></i> Buka
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">
-                        <i class="bi bi-diagram-3 text-secondary me-2"></i> Manajemen Jurusan
-                    </h6>
-                    <p class="text-muted small mb-3">Kelola data jurusan</p>
-                    <a href="{{ route('jurusan.index') }}" class="btn btn-sm btn-secondary">
-                        <i class="bi bi-arrow-right me-1"></i> Buka
-                    </a>
-                </div>
-            </div>
-        </div>
-        @endif
-    </div>
+</div>
 @endsection
