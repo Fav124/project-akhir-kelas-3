@@ -75,6 +75,7 @@ Route::prefix('santri')->name('santri.')->group(function () {
 
     Route::get('/{santri}/edit', [SantriController::class, 'edit'])->name('edit');
     Route::put('/{santri}', [SantriController::class, 'update'])->name('update');
+    Route::get('/{santri}', [SantriController::class, 'show'])->name('show');
     Route::delete('/{santri}', [SantriController::class, 'destroy'])->name('destroy');
 
     // 🔥 UPDATE DRAFT
@@ -116,6 +117,7 @@ Route::prefix('sakit')->name('sakit.')->group(function () {
     Route::post('/', [SakitController::class, 'store'])->name('store');
     Route::get('/{sakit}/edit', [SakitController::class, 'edit'])->name('edit');
     Route::put('/{sakit}', [SakitController::class, 'update'])->name('update');
+    Route::get('/{sakit}', [SakitController::class, 'show'])->name('show');
     // Mark as recovered
     Route::put('/{sakit}/sembuh', [SakitController::class, 'markRecovered'])->name('sembuh');
     Route::delete('/{sakit}', [SakitController::class, 'destroy'])->name('destroy');
@@ -143,6 +145,7 @@ Route::prefix('obat')->name('obat.')->group(function () {
     Route::post('/', [ObatController::class, 'store'])->name('store');
     Route::get('/{obat}/edit', [ObatController::class, 'edit'])->name('edit');
     Route::put('/{obat}', [ObatController::class, 'update'])->name('update');
+    Route::get('/{obat}', [ObatController::class, 'show'])->name('show');
     Route::delete('/{obat}', [ObatController::class, 'destroy'])->name('destroy');
 });
 

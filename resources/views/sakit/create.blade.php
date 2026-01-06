@@ -1,201 +1,228 @@
 @extends('layouts.master')
 @section('content')
+<div class="space-y-6">
     <!-- PAGE HEADER -->
-    <div class="mb-4">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-2">
-                <li class="breadcrumb-item">
-                    <a href="{{ route('dashboard') }}" class="text-decoration-none">Dashboard</a>
+    <div>
+        <nav class="flex mb-2" aria-label="Breadcrumb">
+             <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                <li class="inline-flex items-center">
+                    <a href="{{ route('dashboard') }}" class="inline-flex items-center text-sm font-medium text-text-muted hover:text-primary dark:text-gray-400 dark:hover:text-white">
+                        Dashboard
+                    </a>
                 </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ route('sakit.index') }}" class="text-decoration-none">Data Sakit Santri</a>
+                 <li>
+                    <div class="flex items-center">
+                        <span class="material-symbols-outlined text-text-muted text-lg mx-1">chevron_right</span>
+                        <a href="{{ route('sakit.index') }}" class="text-sm font-medium text-text-muted hover:text-primary dark:text-gray-400 dark:hover:text-white">Data Sakit</a>
+                    </div>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">Tambah Data Sakit</li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                         <span class="material-symbols-outlined text-text-muted text-lg mx-1">chevron_right</span>
+                        <span class="text-sm font-medium text-text-main dark:text-gray-200">Tambah Data Sakit</span>
+                    </div>
+                </li>
             </ol>
         </nav>
-
-        <h4 class="fw-bold mb-0">Tambah Data Santri Sakit</h4>
-        <small class="text-muted">Semua input masuk ke draft dulu! Bisa tambah banyak tanpa hilang 😎</small>
+        <h1 class="text-3xl font-bold text-text-main dark:text-white">Tambah Data Santri Sakit</h1>
+        <p class="text-text-muted dark:text-gray-400 mt-1">Semua input masuk ke draft dulu! Bisa tambah banyak tanpa hilang 😎</p>
     </div>
 
-    <div class="row g-4">
+    <div class="grid lg:grid-cols-2 gap-6">
         <!-- LEFT SECTION - FORM INPUT -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-4">
-                        <i class="bi bi-pencil-square me-2 text-primary"></i> Form Input Data
-                    </h5>
+        <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-bold text-text-main dark:text-white mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">clinical_notes</span>
+                Form Input Data
+            </h2>
 
-                    <form id="formSakit">
-                        @csrf
-                        <input type="hidden" name="edit_id" id="edit_id">
+            <form id="formSakit">
+                @csrf
+                <input type="hidden" name="edit_id" id="edit_id">
 
-                        <h6 class="fw-bold text-primary mb-3">Data Santri</h6>
-
-                        <div class="mb-4">
-                            <label class="form-label">Pilih Santri</label>
-                            <select class="form-select" id="santri_id" name="santri_id" required>
+                <div class="space-y-6">
+                    <!-- Data Santri Section -->
+                    <div>
+                        <h3 class="font-bold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                             <span class="material-symbols-outlined text-primary text-md">person</span>
+                            Data Santri
+                        </h3>
+                         <div>
+                            <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Pilih Santri</label>
+                            <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="santri_id" id="santri_id" required>
                                 <option value="" disabled selected>-- Pilih Santri --</option>
                                 @foreach ($santri as $s)
-                                    <option value="{{ $s->id }}">{{ $s->nis }} - {{ $s->nama_lengkap }}
-                                    </option>
+                                    <option value="{{ $s->id }}">{{ $s->nis }} - {{ $s->nama_lengkap }}</option>
                                 @endforeach
                             </select>
                         </div>
+                    </div>
 
-                        <hr>
+                    <hr class="border-gray-200 dark:border-gray-700">
 
-                        <h6 class="fw-bold text-primary mb-3">Data Penyakit</h6>
+                    <!-- Data Penyakit Section -->
+                     <div>
+                        <h3 class="font-bold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                             <span class="material-symbols-outlined text-primary text-md">stethoscope</span>
+                            Data Penyakit
+                        </h3>
 
-                        <div class="mb-3">
-                            <label class="form-label">Tanggal Mulai Sakit</label>
-                            <input type="date" class="form-control" id="tanggal_mulai_sakit" name="tanggal_mulai_sakit"
-                                required>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Tanggal Mulai Sakit</label>
+                                <input type="date" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="tanggal_mulai_sakit" id="tanggal_mulai_sakit" required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Diagnosis Penyakit</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Contoh: Flu, Demam, Diare" name="diagnosis" id="diagnosis" required>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Gejala yang Dialami</label>
+                                <textarea class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" rows="3" placeholder="Deskripsikan gejala..." name="gejala" id="gejala" required></textarea>
+                            </div>
+
+                             <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Tindakan/Perawatan</label>
+                                <textarea class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" rows="3" placeholder="Tindakan medis yang diberikan..." name="tindakan" id="tindakan" required></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Resep Obat (Deskripsi)</label>
+                                <textarea class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" rows="3" placeholder="Obat yang diberikan..." name="resep_obat" id="resep_obat" required></textarea>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Suhu Tubuh (°C)</label>
+                                    <input type="number" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" placeholder="38.5" step="0.1" name="suhu_tubuh" id="suhu_tubuh">
+                                </div>
+                                <div>
+                                     <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Status Kondisi</label>
+                                    <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="status" id="status" required>
+                                        <option value="" disabled selected>-- Pilih Status --</option>
+                                        <option value="sakit">Masih Sakit</option>
+                                        <option value="sembuh">Sembuh</option>
+                                        <option value="kontrol">Kontrol</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Tanggal Selesai Sakit (Opsional)</label>
+                                <input type="date" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="tanggal_selesai_sakit" id="tanggal_selesai_sakit">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Catatan Tambahan</label>
+                                <textarea class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" rows="2" placeholder="Catatan lainnya..." name="catatan" id="catatan"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-200 dark:border-gray-700">
+
+                    <!-- Obat Section -->
+                    <div>
+                        <h3 class="font-bold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                             <span class="material-symbols-outlined text-primary text-md">medication_liquid</span>
+                            Obat yang Digunakan
+                        </h3>
+
+                        <div id="obatContainer" class="space-y-4 mb-4">
+                            <!-- Obat items added here -->
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Diagnosis Penyakit</label>
-                            <input type="text" class="form-control" id="diagnosis" name="diagnosis"
-                                placeholder="Contoh: Flu, Demam, Diare" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Gejala yang Dialami</label>
-                            <textarea class="form-control" id="gejala" name="gejala" rows="3" placeholder="Deskripsikan gejala..."
-                                required></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Tindakan/Perawatan</label>
-                            <textarea class="form-control" id="tindakan" name="tindakan" rows="3"
-                                placeholder="Tindakan medis yang diberikan..." required></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Resep Obat</label>
-                            <textarea class="form-control" id="resep_obat" name="resep_obat" rows="3" placeholder="Obat yang diberikan..."
-                                required></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Suhu Tubuh (°C)</label>
-                            <input type="number" class="form-control" id="suhu_tubuh" name="suhu_tubuh" placeholder="38.5"
-                                step="0.1">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Status Kondisi</label>
-                            <select class="form-select" id="status" name="status" required>
-                                <option value="" disabled selected>-- Pilih Status --</option>
-                                <option value="sakit">Masih Sakit</option>
-                                <option value="sembuh">Sembuh</option>
-                                <option value="kontrol">Kontrol</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Tanggal Selesai Sakit (Opsional)</label>
-                            <input type="date" class="form-control" id="tanggal_selesai_sakit"
-                                name="tanggal_selesai_sakit">
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label">Catatan Tambahan</label>
-                            <textarea class="form-control" id="catatan" name="catatan" rows="2" placeholder="Catatan lainnya..."></textarea>
-                        </div>
-
-                        <hr>
-
-                        <!-- OBAT SECTION -->
-                        <h6 class="fw-bold text-primary mb-3">
-                            <i class="bi bi-capsule me-2"></i> Obat yang Digunakan
-                        </h6>
-
-                        <div id="obatContainer" class="mb-3">
-                            <!-- Obat items akan ditambahkan di sini -->
-                        </div>
-
-                        <button type="button" class="btn btn-sm btn-outline-primary mb-4" onclick="addObatRow()">
-                            <i class="bi bi-plus-circle me-1"></i> Tambah Obat
+                         <button type="button" class="flex items-center gap-2 px-3 py-1.5 border border-primary text-primary hover:bg-primary/5 rounded-lg text-sm font-medium transition-colors" onclick="addObatRow()">
+                            <span class="material-symbols-outlined text-lg">add_circle</span>
+                            Tambah Obat
                         </button>
-
-                        <div class="d-flex gap-2">
-                            <button type="button" onclick="addToTemporary()" class="btn btn-primary flex-fill"
-                                id="btnSubmit">
-                                <i class="bi bi-plus-circle me-1"></i> TAMBAH KE DRAFT
-                            </button>
-                            <button type="button" onclick="cancelEdit()" class="btn btn-secondary" id="btnCancel"
-                                style="display:none;">
-                                <i class="bi bi-x-circle me-1"></i> Batal
-                            </button>
-                        </div>
-                    </form>
-
+                    </div>
                 </div>
-            </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onclick="addToTemporary()" class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-green-600 text-white font-medium rounded-lg transition-colors" id="btnSubmit">
+                        <span class="material-symbols-outlined text-lg">add_circle</span>
+                        <span>TAMBAH KE DRAFT</span>
+                    </button>
+                    <button type="button" onclick="cancelEdit()" class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-300 dark:bg-gray-700 text-text-main dark:text-white font-medium rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors hidden" id="btnCancel">
+                        <span class="material-symbols-outlined text-lg">cancel</span>
+                        <span>Batal</span>
+                    </button>
+                </div>
+            </form>
         </div>
 
         <!-- RIGHT SECTION - DRAFT TABLE -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-list-check me-2 text-primary"></i> Draft Autosave</h5>
-                    <span class="badge bg-primary" id="draftCount">0</span>
-                </div>
+        <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-sm overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+                <h2 class="text-lg font-bold text-text-main dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">fact_check</span>
+                    Draft Autosave
+                </h2>
+                <span class="px-3 py-1 bg-primary text-white text-sm font-bold rounded-full" id="draftCount">0</span>
+            </div>
 
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Santri</th>
-                                <th>Diagnosis</th>
-                                <th style="width:180px" class="text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="draftTable">
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox"></i> Belum ada data tersimpan
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="flex-1 overflow-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 sticky top-0">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Santri</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Diagnosis</th>
+                            <th class="px-6 py-3 text-center text-sm font-semibold text-text-main dark:text-gray-300">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="draftTable" class="divide-y divide-gray-200 dark:divide-gray-800">
+                        <tr>
+                            <td colspan="3" class="px-6 py-8 text-center text-text-muted dark:text-gray-400">
+                                <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 block mb-2">inbox</span>
+                                Belum ada data tersimpan
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="p-3 border-top text-end">
-                    <form action="{{ route('sakit.saveAll') }}" method="POST">
-                        @csrf
-                        <button class="btn btn-success" id="btnSaveAll" disabled>
-                            <i class="bi bi-check2-all me-1"></i> SIMPAN SEMUA KE DATABASE
-                        </button>
-                    </form>
-                </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+                <form action="{{ route('sakit.saveAll') }}" method="POST">
+                    @csrf
+                    <button class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors" id="btnSaveAll" disabled>
+                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                        <span>SIMPAN SEMUA KE DATABASE</span>
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DETAIL -->
-    <div class="modal fade" id="detailModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-file-medical me-2"></i>Detail Draft Sakit Santri</h5>
-                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="modalContent">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
+    <!-- DETAIL MODAL -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-surface-light dark:bg-surface-dark z-10">
+                <h3 class="text-lg font-bold text-text-main dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">info</span>
+                    Detail Draft Sakit
+                </h3>
+                <button type="button" onclick="closeDetailModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+            <div class="p-6" id="modalContent">
+                <div class="flex justify-center py-8">
+                    <div class="inline-flex items-center gap-2 text-primary">
+                        <span class="material-symbols-outlined animate-spin">refresh</span>
+                        <span>Loading...</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ALERT -->
-    <div id="alertBox" style="position: fixed; top: 20px; right: 20px; z-index: 2000; width: 300px;"></div>
+    <!-- Alert Box -->
+    <div id="alertBox" class="fixed top-6 right-6 z-50 max-w-sm space-y-2"></div>
 
     <script>
         const santriList = @json($santri);
@@ -203,14 +230,32 @@
         const form = document.getElementById('formSakit');
         let obatCounter = 0;
 
-        // ⬇️ Alert Function
         function showAlert(message, type = "success") {
             const box = document.getElementById("alertBox");
             const id = "alert-" + Date.now();
+            const bgClass = {
+                'success': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700',
+                'danger': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700',
+                'question': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700',
+                'warning': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700',
+                'secondary': 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+            }[type] || 'bg-blue-100';
+
+            const icon = {
+                'success': 'check_circle',
+                'danger': 'error',
+                'question': 'info',
+                'warning': 'warning',
+                'secondary': 'check'
+            }[type] || 'info';
+
             const alert = `
-                <div class="alert alert-${type} alert-dismissible fade show shadow-sm" id="${id}">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div id="${id}" class="p-4 border rounded-lg shadow-sm ${bgClass} flex items-start gap-3 animate-in slide-in-from-top">
+                    <span class="material-symbols-outlined flex-shrink-0 mt-0.5">${icon}</span>
+                    <p class="flex-1 text-sm font-medium">${message}</p>
+                    <button type="button" onclick="document.getElementById('${id}').remove()" class="flex-shrink-0 opacity-70 hover:opacity-100">
+                        <span class="material-symbols-outlined text-lg">close</span>
+                    </button>
                 </div>
             `;
             box.insertAdjacentHTML("beforeend", alert);
@@ -220,72 +265,65 @@
             }, 3500);
         }
 
-        // ⬇️ Add Obat Row
         function addObatRow(data = null) {
             obatCounter++;
             const container = document.getElementById('obatContainer');
 
             const row = document.createElement('div');
-            row.className = 'card mb-2 obat-item';
+            row.className = 'p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 obat-item';
             row.dataset.id = obatCounter;
 
             row.innerHTML = `
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="mb-0 fw-bold text-primary">Obat #${obatCounter}</h6>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="removeObatRow(${obatCounter})">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                <div class="flex justify-between items-center mb-3">
+                    <h6 class="text-sm font-bold text-primary">Obat #${obatCounter}</h6>
+                    <button type="button" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 rounded transition-colors" onclick="removeObatRow(${obatCounter})">
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block text-xs font-medium text-text-muted mb-1">Nama Obat</label>
+                        <select class="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary obat-select" name="obat_data[${obatCounter}][obat_id]" required>
+                            <option value="">-- Pilih Obat --</option>
+                            ${obatList.map(obat => `
+                                <option value="${obat.id}" ${data && data.obat_id == obat.id ? 'selected' : ''}>
+                                    ${obat.nama_obat}
+                                </option>
+                            `).join('')}
+                        </select>
                     </div>
-                    <div class="row g-2">
-                        <div class="col-md-6">
-                            <label class="form-label small">Nama Obat</label>
-                            <select class="form-select form-select-sm obat-select" name="obat_data[${obatCounter}][obat_id]" required>
-                                <option value="">-- Pilih Obat --</option>
-                                ${obatList.map(obat => `
-                                        <option value="${obat.id}" ${data && data.obat_id == obat.id ? 'selected' : ''}>
-                                            ${obat.nama_obat}
-                                        </option>
-                                    `).join('')}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">Jumlah</label>
-                            <input type="number" class="form-control form-control-sm"
-                                name="obat_data[${obatCounter}][jumlah]"
-                                value="${data ? data.jumlah : 1}" min="1" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small">Dosis</label>
-                            <input type="text" class="form-control form-control-sm"
-                                name="obat_data[${obatCounter}][dosis]"
-                                value="${data ? data.dosis : ''}"
-                                placeholder="3x sehari">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small">Keterangan</label>
-                            <textarea class="form-control form-control-sm" rows="2"
-                                name="obat_data[${obatCounter}][keterangan]"
-                                placeholder="Diminum setelah makan...">${data ? data.keterangan : ''}</textarea>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-medium text-text-muted mb-1">Jumlah</label>
+                        <input type="number" class="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            name="obat_data[${obatCounter}][jumlah]"
+                            value="${data ? data.jumlah : 1}" min="1" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-text-muted mb-1">Dosis</label>
+                        <input type="text" class="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            name="obat_data[${obatCounter}][dosis]"
+                            value="${data ? data.dosis : ''}"
+                            placeholder="3x sehari">
+                    </div>
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block text-xs font-medium text-text-muted mb-1">Keterangan</label>
+                        <textarea class="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary" rows="2"
+                            name="obat_data[${obatCounter}][keterangan]"
+                            placeholder="Diminum setelah makan...">${data ? data.keterangan : ''}</textarea>
                     </div>
                 </div>
             `;
-
             container.appendChild(row);
         }
 
-        // ⬇️ Remove Obat Row
         function removeObatRow(id) {
             const item = document.querySelector(`.obat-item[data-id="${id}"]`);
             if (item) item.remove();
         }
 
-        // ⬇️ Collect Obat Data
         function collectObatData() {
             const obatData = [];
             const items = document.querySelectorAll('.obat-item');
-
             items.forEach(item => {
                 const obatId = item.querySelector('.obat-select').value;
                 const jumlah = item.querySelector('input[name*="[jumlah]"]').value;
@@ -301,11 +339,9 @@
                     });
                 }
             });
-
             return obatData;
         }
 
-        // ⬇️ Add to Draft
         function addToTemporary() {
             if (!form.checkValidity()) {
                 form.reportValidity();
@@ -314,14 +350,8 @@
 
             const fd = new FormData(form);
             const editId = document.getElementById('edit_id').value;
-
-            // Collect obat data
             const obatData = collectObatData();
-
-            const url = editId ?
-                "{{ route('sakit.updateTemporary') }}" :
-                "{{ route('sakit.storeTemporary') }}";
-
+            const url = editId ? "{{ route('sakit.updateTemporary') }}" : "{{ route('sakit.storeTemporary') }}";
             const method = editId ? "PUT" : "POST";
 
             const data = {
@@ -337,7 +367,6 @@
                 catatan: fd.get('catatan'),
                 obat_data: obatData
             };
-
             if (editId) data.edit_id = editId;
 
             fetch(url, {
@@ -355,9 +384,8 @@
                         document.getElementById('edit_id').value = '';
                         document.getElementById('obatContainer').innerHTML = '';
                         obatCounter = 0;
-                        document.getElementById('btnSubmit').innerHTML =
-                            '<i class="bi bi-plus-circle me-1"></i> TAMBAH KE DRAFT';
-                        document.getElementById('btnCancel').style.display = 'none';
+                        document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
+                        document.getElementById('btnCancel').classList.add('hidden');
                         renderDrafts();
                         showAlert(result.message || "Data berhasil disimpan! 🎉", "success");
                     }
@@ -365,7 +393,6 @@
                 .catch(() => showAlert("Gagal menyimpan data!", "danger"));
         }
 
-        // ⬇️ Render Drafts
         function renderDrafts() {
             fetch("{{ route('sakit.getTemporary') }}")
                 .then(res => res.json())
@@ -379,37 +406,40 @@
 
                     if (!data.length) {
                         table.innerHTML = `
-                            <tr><td colspan="3" class="text-center text-muted py-4">
-                                <i class='bi bi-inbox'></i> Belum ada data
+                            <tr><td colspan="3" class="px-6 py-8 text-center text-text-muted dark:text-gray-400">
+                                <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 block mb-2">inbox</span>
+                                Belum ada data
                             </td></tr>`;
                         return;
                     }
 
                     table.innerHTML = data.map(item => {
                         const santri = santriList.find(s => s.id == item.santri_id);
-                        const statusBadge = item.status === 'sakit' ? 'danger' : (item.status === 'sembuh' ?
-                            'success' : 'warning');
+                        const statusColor = item.status === 'sakit' ? 'red' : (item.status === 'sembuh' ? 'green' : 'amber');
+                        const statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800 capitalize">${item.status}</span>`;
 
                         return `
-                            <tr>
-                                <td>
-                                    <strong>${santri ? santri.nama_lengkap : 'N/A'}</strong><br>
-                                    <small class="text-muted">${santri ? santri.nis : ''}</small>
+                             <tr class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                                <td class="px-6 py-4">
+                                     <div class="font-medium text-text-main dark:text-white">${santri ? santri.nama_lengkap : 'N/A'}</div>
+                                    <div class="text-xs text-text-muted">${santri ? santri.nis : ''}</div>
                                 </td>
-                                <td>
-                                    ${item.diagnosis}<br>
-                                    <span class="badge bg-${statusBadge}">${item.status}</span>
+                                <td class="px-6 py-4 text-text-main dark:text-gray-300">
+                                    <div class="mb-1">${item.diagnosis}</div>
+                                    ${statusBadge}
                                 </td>
-                                <td class="text-center">
-                                    <button class="btn btn-info btn-sm" onclick='openDetail(${JSON.stringify(item.id)})' title="Detail">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="btn btn-warning btn-sm" onclick='editDraft(${JSON.stringify(item.id)})' title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" onclick='deleteTemp(${JSON.stringify(item.id)})' title="Hapus">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors" onclick='openDetail(${JSON.stringify(item.id)})'>
+                                            <span class="material-symbols-outlined text-lg">visibility</span>
+                                        </button>
+                                        <button class="p-2 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors" onclick='editDraft(${JSON.stringify(item.id)})'>
+                                            <span class="material-symbols-outlined text-lg">edit</span>
+                                        </button>
+                                        <button class="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors" onclick='deleteTemp(${JSON.stringify(item.id)})'>
+                                            <span class="material-symbols-outlined text-lg">delete</span>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         `;
@@ -417,33 +447,29 @@
                 });
         }
 
-        // ⬇️ Open Detail Modal
         function openDetail(id) {
-            const modal = new bootstrap.Modal('#detailModal');
-            modal.show();
+             document.getElementById('detailModal').classList.remove('hidden');
+             document.body.style.overflow = 'hidden';
 
             fetch(`{{ route('sakit.getTemporary') }}?id=${id}`)
                 .then(res => res.json())
-                .then(d => {
+                 .then(d => {
                     const santri = santriList.find(s => s.id == d.santri_id);
-                    const statusBadge = d.status === 'sakit' ? 'danger' : (d.status === 'sembuh' ? 'success' :
-                        'warning');
+                     const statusColor = d.status === 'sakit' ? 'red' : (d.status === 'sembuh' ? 'green' : 'amber');
+                    const statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800 capitalize">${d.status}</span>`;
 
                     let obatHTML = '';
                     if (d.obat_data && d.obat_data.length > 0) {
-                        obatHTML =
-                            '<h6 class="fw-bold text-primary border-bottom pb-2 mt-4"><i class="bi bi-capsule me-2"></i>Obat yang Digunakan</h6><div class="row g-2">';
-                        d.obat_data.forEach((obat, index) => {
+                        obatHTML = '<h6 class="text-sm font-bold text-primary mt-6 mb-3 border-b border-gray-200 dark:border-gray-700 pb-2">Obat yang Digunakan</h6><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                        d.obat_data.forEach(obat => {
                             const obatInfo = obatList.find(o => o.id == obat.obat_id);
                             obatHTML += `
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-body p-3">
-                                            <h6 class="fw-bold text-primary mb-2">${obatInfo ? obatInfo.nama_obat : 'N/A'}</h6>
-                                            <p class="mb-1 small"><strong>Jumlah:</strong> ${obat.jumlah}</p>
-                                            <p class="mb-1 small"><strong>Dosis:</strong> ${obat.dosis || '-'}</p>
-                                            ${obat.keterangan ? `<p class="mb-0 small text-muted">${obat.keterangan}</p>` : ''}
-                                        </div>
+                                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                                    <h6 class="font-bold text-text-main dark:text-white mb-2">${obatInfo ? obatInfo.nama_obat : 'N/A'}</h6>
+                                    <div class="space-y-1 text-sm text-text-muted dark:text-gray-400">
+                                         <p><span class="font-medium">Jumlah:</span> ${obat.jumlah}</p>
+                                         <p><span class="font-medium">Dosis:</span> ${obat.dosis || '-'}</p>
+                                         ${obat.keterangan ? `<p class="italic text-xs mt-1">"${obat.keterangan}"</p>` : ''}
                                     </div>
                                 </div>
                             `;
@@ -451,67 +477,76 @@
                         obatHTML += '</div>';
                     }
 
-                    document.getElementById("modalContent").innerHTML = `
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <h6 class="text-primary fw-bold border-bottom pb-2">
-                                    <i class="bi bi-person-badge me-2"></i>Data Santri
-                                </h6>
-                                <table class="table table-sm table-borderless">
-                                    <tr><td width="140"><b>NIS</b></td><td>: ${santri ? santri.nis : 'N/A'}</td></tr>
-                                    <tr><td><b>Nama</b></td><td>: ${santri ? santri.nama_lengkap : 'N/A'}</td></tr>
-                                    <tr><td><b>Kelas</b></td><td>: ${santri && santri.kelas ? santri.kelas.nama_kelas : 'N/A'}</td></tr>
-                                </table>
+                     document.getElementById("modalContent").innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <h4 class="text-sm font-bold text-primary border-b border-gray-200 dark:border-gray-700 pb-2">Data Santri</h4>
+                                <div>
+                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">NIS</p>
+                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${santri ? santri.nis : 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Nama</p>
+                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${santri ? santri.nama_lengkap : 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Kelas</p>
+                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${santri && santri.kelas ? santri.kelas.nama_kelas : 'N/A'}</p>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <h6 class="text-primary fw-bold border-bottom pb-2">
-                                    <i class="bi bi-clipboard-pulse me-2"></i>Data Penyakit
-                                </h6>
-                                <table class="table table-sm table-borderless">
-                                    <tr><td width="140"><b>Diagnosis</b></td><td>: ${d.diagnosis}</td></tr>
-                                    <tr><td><b>Status</b></td><td>: <span class="badge bg-${statusBadge}">${d.status}</span></td></tr>
-                                    <tr><td><b>Tanggal Mulai</b></td><td>: ${d.tanggal_mulai_sakit}</td></tr>
-                                    ${d.tanggal_selesai_sakit ? `<tr><td><b>Tanggal Selesai</b></td><td>: ${d.tanggal_selesai_sakit}</td></tr>` : ''}
-                                    ${d.suhu_tubuh ? `<tr><td><b>Suhu Tubuh</b></td><td>: ${d.suhu_tubuh}°C</td></tr>` : ''}
-                                </table>
+                             <div class="space-y-4">
+                                <h4 class="text-sm font-bold text-primary border-b border-gray-200 dark:border-gray-700 pb-2">Data Penyakit</h4>
+                                <div>
+                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Diagnosis</p>
+                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.diagnosis}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Status</p>
+                                    <div class="mt-1">${statusBadge}</div>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Tanggal Mulai</p>
+                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.tanggal_mulai_sakit}</p>
+                                </div>
                             </div>
                         </div>
 
-                        <h6 class="fw-bold text-primary border-bottom pb-2 mt-3">Detail Lengkap</h6>
-                        <div class="mb-3">
-                            <strong class="small">Gejala:</strong>
-                            <p class="text-muted mb-0">${d.gejala}</p>
+                         <div class="mt-6 space-y-4">
+                             <div>
+                                <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Gejala</p>
+                                <p class="text-sm text-text-main dark:text-white mt-1">${d.gejala}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Tindakan</p>
+                                <p class="text-sm text-text-main dark:text-white mt-1">${d.tindakan}</p>
+                            </div>
+                             <div>
+                                <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Resep (Deskripsi)</p>
+                                <p class="text-sm text-text-main dark:text-white mt-1">${d.resep_obat}</p>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <strong class="small">Tindakan/Perawatan:</strong>
-                            <p class="text-muted mb-0">${d.tindakan}</p>
-                        </div>
-                        <div class="mb-3">
-                            <strong class="small">Resep Obat:</strong>
-                            <p class="text-muted mb-0">${d.resep_obat}</p>
-                        </div>
-                        ${d.catatan ? `
-                            <div class="mb-3">
-                                <strong class="small">Catatan:</strong>
-                                <p class="text-muted mb-0">${d.catatan}</p>
-                            </div>` : ''}
 
                         ${obatHTML}
 
-                        <hr>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-warning flex-fill" onclick='editDraft("${d.id}")' data-bs-dismiss="modal">
-                                <i class="bi bi-pencil me-1"></i> Edit
+                         <div class="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
+                             <button class="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors" onclick='editDraft("${d.id}")'>
+                                <span class="material-symbols-outlined text-lg">edit</span>
+                                <span>Edit</span>
                             </button>
-                            <button class="btn btn-danger flex-fill" onclick='deleteTemp("${d.id}")'>
-                                <i class="bi bi-trash me-1"></i> Hapus
+                             <button class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors" onclick='deleteTemp("${d.id}")'>
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                                <span>Hapus</span>
                             </button>
                         </div>
                     `;
-                });
+                 });
         }
 
-        // ⬇️ Edit Draft
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
         function editDraft(id) {
             fetch(`{{ route('sakit.getTemporary') }}?id=${id}`)
                 .then(res => res.json())
@@ -528,64 +563,54 @@
                     document.getElementById('tanggal_selesai_sakit').value = d.tanggal_selesai_sakit || '';
                     document.getElementById('catatan').value = d.catatan || '';
 
-                    // Clear and reload obat
                     document.getElementById('obatContainer').innerHTML = '';
                     obatCounter = 0;
-
                     if (d.obat_data && d.obat_data.length > 0) {
                         d.obat_data.forEach(obat => addObatRow(obat));
                     }
 
-                    document.getElementById('btnSubmit').innerHTML =
-                        '<i class="bi bi-check-circle me-1"></i> UPDATE DRAFT';
-                    document.getElementById('btnCancel').style.display = 'block';
+                     document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>UPDATE DRAFT</span>';
+                    document.getElementById('btnCancel').classList.remove('hidden');
 
-                    form.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                    showAlert("Mode edit aktif! Ubah data lalu klik UPDATE DRAFT", "info");
+                     closeDetailModal();
+                    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     showAlert("Mode edit aktif! Ubah data lalu klik UPDATE DRAFT", "info");
                 });
         }
 
-        // ⬇️ Cancel Edit
         function cancelEdit() {
             form.reset();
             document.getElementById('edit_id').value = '';
             document.getElementById('obatContainer').innerHTML = '';
             obatCounter = 0;
-            document.getElementById('btnSubmit').innerHTML = '<i class="bi bi-plus-circle me-1"></i> TAMBAH KE DRAFT';
-            document.getElementById('btnCancel').style.display = 'none';
+             document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
+            document.getElementById('btnCancel').classList.add('hidden');
             showAlert("Mode edit dibatalkan", "secondary");
         }
 
-        // ⬇️ Delete Draft
         function deleteTemp(id) {
-            if (!confirm('Yakin ingin menghapus draft ini?')) return;
+             if (!confirm('Yakin ingin menghapus draft ini?')) return;
 
-            fetch("{{ route('sakit.deleteTemporary') }}", {
+             fetch("{{ route('sakit.deleteTemporary') }}", {
                     method: "DELETE",
                     headers: {
-                        "X-CSRF-TOKEN": document.querySelector("input[name=_token]").value,
+                         "X-CSRF-TOKEN": document.querySelector("input[name=_token]").value,
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({
-                        id
-                    })
+                    body: JSON.stringify({ id })
                 })
-                .then(res => res.json())
+                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         renderDrafts();
-                        const modalEl = document.getElementById('detailModal');
-                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                        if (modalInstance) modalInstance.hide();
+                         closeDetailModal();
                         showAlert("Data berhasil dihapus dari draft 🗑️", "warning");
                     }
                 })
-                .catch(() => showAlert("Gagal menghapus data!", "danger"));
+                 .catch(() => showAlert("Gagal menghapus data!", "danger"));
         }
 
         document.addEventListener("DOMContentLoaded", renderDrafts);
     </script>
+</div>
 @endsection

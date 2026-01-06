@@ -15,9 +15,22 @@ class JurusanController extends Controller
     /**
      * Display a listing of jurusan
      */
-    public function index()
+    public function index(Request $request)
     {
-        $jurusans = Jurusan::withCount(['kelas', 'santris'])->orderBy('nama')->get();
+        if ($request->ajax()) {
+            $query = Jurusan::withCount(['kelas', 'santris']);
+
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where('nama', 'LIKE', "%{$search}%")
+                      ->orWhere('deskripsi', 'LIKE', "%{$search}%");
+            }
+
+            $jurusans = $query->orderBy('nama')->paginate(10);
+            return view('jurusan.table', compact('jurusans'))->render();
+        }
+
+        $jurusans = Jurusan::withCount(['kelas', 'santris'])->orderBy('nama')->paginate(10);
         return view('jurusan.index', compact('jurusans'));
     }
 

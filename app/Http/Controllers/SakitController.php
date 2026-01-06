@@ -17,9 +17,28 @@ class SakitController extends Controller
     // ========================
     // 📍 INDEX
     // ========================
-    public function index()
+    public function index(Request $request)
     {
-        $sakit = SakitSantri::with(['santri', 'obats'])->orderBy('tanggal_mulai_sakit', 'desc')->get();
+        if ($request->ajax()) {
+            $query = SakitSantri::with(['santri', 'santri.kelas', 'obats'])->orderBy('tanggal_mulai_sakit', 'desc');
+
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->whereHas('santri', function($q) use ($search) {
+                    $q->where('nama_lengkap', 'LIKE', "%{$search}%")
+                      ->orWhere('nis', 'LIKE', "%{$search}%");
+                })->orWhere('diagnosis', 'LIKE', "%{$search}%")
+                  ->orWhere('status', 'LIKE', "%{$search}%");
+            }
+
+            $sakit = $query->paginate(10);
+            return view('sakit.table', compact('sakit'))->render();
+        }
+
+        $sakit = SakitSantri::with(['santri', 'santri.kelas', 'obats'])
+            ->orderBy('tanggal_mulai_sakit', 'desc')
+            ->paginate(10);
+
         return view('sakit.index', compact('sakit'));
     }
 
@@ -243,6 +262,15 @@ class SakitController extends Controller
         $obats = Obat::all();
         $sakit->load(['santri', 'obats']);
         return view('sakit.edit', compact('sakit', 'santri', 'obats'));
+    }
+
+    // ========================
+    // 📍 SHOW
+    // ========================
+    public function show(SakitSantri $sakit)
+    {
+        $sakit->load(['santri.kelas', 'obats', 'user']); // Assuming 'user' is the petugas
+        return view('sakit.show', compact('sakit'));
     }
 
     // ========================

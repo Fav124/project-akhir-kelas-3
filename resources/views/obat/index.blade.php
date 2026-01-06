@@ -1,166 +1,84 @@
 @extends('layouts.master')
-@section('content')
-<div class="space-y-6">
-    <!-- PAGE HEADER -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-text-main dark:text-white">Data Obat</h1>
-            <p class="text-text-muted dark:text-gray-400 mt-1">Kelola data obat dengan baik</p>
-        </div>
-        <a href="{{ route('obat.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-green-600 text-white font-medium rounded-lg transition-colors w-fit">
-            <span class="material-symbols-outlined text-xl">add_circle</span>
-            <span>Tambah Obat</span>
-        </a>
-    </div>
 
-    <!-- DATA TABLE -->
-    <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-sm overflow-hidden">
-        @if ($obat->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">No</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Foto</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Nama Obat</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Deskripsi</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Stok</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Satuan</th>
-                            <th class="px-6 py-3 text-center text-sm font-semibold text-text-main dark:text-gray-300">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-                        @foreach ($obat as $item)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
-                                <td class="px-6 py-4 text-sm font-semibold text-text-main dark:text-gray-300">{{ $loop->iteration }}</td>
-                                <td class="px-6 py-4">
-                                    <img src="{{ $item->foto ? asset('storage/photos/obats/' . basename($item->foto)) : asset('dummy.png') }}" 
-                                         alt="{{ $item->nama_obat }}" 
-                                         class="w-10 h-10 rounded-lg object-cover">
-                                </td>
-                                <td class="px-6 py-4 text-sm text-text-main dark:text-gray-300 font-medium">{{ $item->nama_obat }}</td>
-                                <td class="px-6 py-4 text-sm text-text-muted dark:text-gray-400">{{ substr($item->deskripsi, 0, 40) }}{{ strlen($item->deskripsi) > 40 ? '...' : '' }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    @if ($item->stok > 10)
-                                        <span class="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">{{ $item->stok }}</span>
-                                    @elseif ($item->stok > 5)
-                                        <span class="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-xs font-medium">{{ $item->stok }}</span>
-                                    @else
-                                        <span class="inline-block px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full text-xs font-medium">{{ $item->stok }}</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-sm text-text-main dark:text-gray-300">{{ $item->satuan }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <button type="button" 
-                                                onclick="openDetailModal({{ $item->id }})"
-                                                class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                                                title="Lihat detail">
-                                            <span class="material-symbols-outlined text-lg">visibility</span>
-                                        </button>
-                                        <a href="{{ route('obat.edit', $item->id) }}" 
-                                           class="p-2 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
-                                           title="Edit">
-                                            <span class="material-symbols-outlined text-lg">edit</span>
-                                        </a>
-                                        <form action="{{ route('obat.destroy', $item->id) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                                                    onclick="return confirm('Yakin ingin menghapus?')"
-                                                    title="Hapus">
-                                                <span class="material-symbols-outlined text-lg">delete</span>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            <!-- DETAIL MODAL -->
-                            <div id="detailModal{{ $item->id }}" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
-                                <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
-                                    <!-- Modal Header -->
-                                    <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-surface-light dark:bg-surface-dark">
-                                        <div class="flex items-center gap-3">
-                                            <span class="material-symbols-outlined text-primary text-2xl">medicine</span>
-                                            <h3 class="text-lg font-bold text-text-main dark:text-white">Detail Obat</h3>
-                                        </div>
-                                        <button type="button" onclick="closeDetailModal({{ $item->id }})" class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                                            <span class="material-symbols-outlined">close</span>
-                                        </button>
-                                    </div>
-                                    <!-- Modal Body -->
-                                    <div class="p-6">
-                                        <div class="space-y-4">
-                                            <div>
-                                                <p class="text-xs font-semibold text-text-muted dark:text-gray-400 uppercase tracking-wide">Nama Obat</p>
-                                                <p class="text-sm font-medium text-text-main dark:text-gray-300 mt-1">{{ $item->nama_obat }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="text-xs font-semibold text-text-muted dark:text-gray-400 uppercase tracking-wide">Deskripsi</p>
-                                                <p class="text-sm font-medium text-text-main dark:text-gray-300 mt-1">{{ $item->deskripsi ?: '-' }}</p>
-                                            </div>
-                                            <div class="grid grid-cols-2 gap-4 pt-4">
-                                                <div>
-                                                    <p class="text-xs font-semibold text-text-muted dark:text-gray-400 uppercase tracking-wide">Stok</p>
-                                                    <p class="text-sm font-medium text-text-main dark:text-gray-300 mt-1">{{ $item->stok }}</p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-xs font-semibold text-text-muted dark:text-gray-400 uppercase tracking-wide">Satuan</p>
-                                                    <p class="text-sm font-medium text-text-main dark:text-gray-300 mt-1">{{ $item->satuan }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Modal Footer -->
-                                    <div class="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 sticky bottom-0">
-                                        <button type="button" 
-                                                onclick="closeDetailModal({{ $item->id }})"
-                                                class="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-text-main dark:text-white font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                                            Tutup
-                                        </button>
-                                        <a href="{{ route('obat.edit', $item->id) }}" 
-                                           class="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors">
-                                            <span class="material-symbols-outlined text-lg">edit</span>
-                                            <span>Edit</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </tbody>
-                </table>
+@section('title', 'Data Obat - Deisa')
+
+@section('content')
+<nav aria-label="Breadcrumb" class="flex mb-4">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a class="inline-flex items-center text-sm font-medium text-text-muted hover:text-primary dark:text-gray-400 dark:hover:text-white" href="{{ route('dashboard') }}">
+                <span class="material-symbols-outlined text-lg mr-2">home</span>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <span class="material-symbols-outlined text-text-muted text-lg">chevron_right</span>
+                <span class="ml-1 text-sm font-medium text-text-main md:ml-2 dark:text-white">Data Obat</span>
             </div>
-        @else
-            <div class="text-center py-12">
-                <span class="material-symbols-outlined text-6xl text-gray-400 dark:text-gray-600 block mb-4">inbox</span>
-                <p class="text-text-muted dark:text-gray-400 mb-4">Belum ada data obat</p>
-                <a href="{{ route('obat.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-green-600 text-white font-medium rounded-lg transition-colors">
-                    <span class="material-symbols-outlined text-lg">add_circle</span>
-                    <span>Tambah Obat Pertama</span>
-                </a>
-            </div>
-        @endif
+        </li>
+    </ol>
+</nav>
+
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div>
+        <h2 class="text-2xl font-bold text-text-main dark:text-white">Data Obat</h2>
+        <p class="text-text-muted text-sm mt-1">Kelola stok dan informasi obat.</p>
     </div>
+    <a href="{{ route('obat.create') }}" class="bg-primary hover:bg-green-400 text-surface-dark font-bold py-2.5 px-5 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 flex items-center gap-2">
+        <span class="material-symbols-outlined">add_circle</span>
+        Tambah Obat
+    </a>
 </div>
 
-<script>
-function openDetailModal(id) {
-    document.getElementById('detailModal' + id).classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden p-4">
+    <div class="mb-4">
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <span class="material-symbols-outlined text-gray-400">search</span>
+            </div>
+            <input type="text" id="searchInput" class="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary dark:focus:border-primary" placeholder="Cari obat...">
+        </div>
+    </div>
 
-function closeDetailModal(id) {
-    document.getElementById('detailModal' + id).classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(event) {
-    if (event.target.id && event.target.id.startsWith('detailModal')) {
-        event.target.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-});
-</script>
+    <div id="tableContainer">
+        @include('obat.table')
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function() {
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        function fetchData(page = 1, search = '') {
+            $.ajax({
+                url: "{{ route('obat.index') }}" + "?page=" + page + "&search=" + search,
+                success: function(data) {
+                    $('#tableContainer').html(data);
+                }
+            });
+        }
+
+        $('#searchInput').on('keyup', debounce(function() {
+            let search = $(this).val();
+            fetchData(1, search);
+        }, 300));
+
+        $(document).on('click', '.pagination a', function(event) {
+            event.preventDefault();
+            let page = $(this).attr('href').split('page=')[1];
+            let search = $('#searchInput').val();
+            fetchData(page, search);
+        });
+    });
+</script>
+@endpush

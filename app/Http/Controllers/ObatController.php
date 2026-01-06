@@ -15,9 +15,23 @@ class ObatController extends Controller
     // ========================
     // 📍 INDEX
     // ========================
-    public function index()
+    public function index(Request $request)
     {
-        $obat = Obat::orderBy('nama_obat', 'asc')->get();
+        if ($request->ajax()) {
+            $query = Obat::orderBy('nama_obat', 'asc');
+
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where('nama_obat', 'LIKE', "%{$search}%")
+                      ->orWhere('deskripsi', 'LIKE', "%{$search}%")
+                      ->orWhere('satuan', 'LIKE', "%{$search}%");
+            }
+
+            $obat = $query->paginate(10);
+            return view('obat.table', compact('obat'))->render();
+        }
+
+        $obat = Obat::orderBy('nama_obat', 'asc')->paginate(10);
         return view('obat.index', compact('obat'));
     }
 
@@ -200,6 +214,26 @@ class ObatController extends Controller
     public function edit(Obat $obat)
     {
         return view('obat.edit', compact('obat'));
+    }
+
+    // ========================
+    // 📍 SHOW
+    // ========================
+    public function show(Obat $obat)
+    {
+        // Load recent usage history
+        // Note: We'll retrieve usage via SakitSantri pivot for now as a simple history
+        // Adjust if you have a dedicated 'obat_histories' table for stock mutations
+        $riwayatPenggunaan = \DB::table('sakit_santri_obat')
+            ->join('sakit_santris', 'sakit_santri_obat.sakit_santri_id', '=', 'sakit_santris.id')
+            ->join('santris', 'sakit_santris.santri_id', '=', 'santris.id')
+            ->where('sakit_santri_obat.obat_id', $obat->id)
+            ->select('sakit_santris.tanggal_mulai_sakit', 'santris.nama_lengkap', 'sakit_santri_obat.jumlah', 'sakit_santri_obat.created_at')
+            ->orderBy('sakit_santri_obat.created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('obat.show', compact('obat', 'riwayatPenggunaan'));
     }
 
     // ========================

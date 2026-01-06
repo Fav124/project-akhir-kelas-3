@@ -18,9 +18,25 @@ class SantriController extends Controller
     // ========================
     // 📍 INDEX
     // ========================
-    public function index()
+    public function index(Request $request)
     {
-        $santri = Santri::with('kelas')->get();
+        if ($request->ajax()) {
+            $query = Santri::with(['kelas', 'jurusan']);
+
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where('nama_lengkap', 'LIKE', "%{$search}%")
+                      ->orWhere('nis', 'LIKE', "%{$search}%")
+                      ->orWhereHas('kelas', function($q) use ($search) {
+                          $q->where('nama_kelas', 'LIKE', "%{$search}%");
+                      });
+            }
+
+            $santri = $query->paginate(10);
+            return view('santri.table', compact('santri'))->render();
+        }
+
+        $santri = Santri::with('kelas')->paginate(10);
         return view('santri.index', compact('santri'));
     }
 
@@ -287,6 +303,15 @@ class SantriController extends Controller
         $kelas = Kelas::all();
         $wali  = WaliSantri::where('santri_id', $santri->id)->first();
         return view('santri.edit', compact('santri', 'kelas', 'wali'));
+    }
+
+    // ========================
+    // 📍 SHOW
+    // ========================
+    public function show(Santri $santri)
+    {
+        $santri->load(['kelas', 'wali', 'sakitSantris.obats']);
+        return view('santri.show', compact('santri'));
     }
 
     // ========================

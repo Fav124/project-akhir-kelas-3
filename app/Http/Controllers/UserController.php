@@ -18,9 +18,23 @@ class UserController extends Controller
     /**
      * Display a listing of users
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderBy('name')->get();
+        if ($request->ajax()) {
+            $query = User::orderBy('name');
+
+            if ($request->has('search') && !empty($request->search)) {
+                $search = $request->search;
+                $query->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%")
+                      ->orWhere('phone', 'LIKE', "%{$search}%");
+            }
+
+            $users = $query->paginate(10);
+            return view('users.table', compact('users'))->render();
+        }
+
+        $users = User::orderBy('name')->paginate(10);
         return view('users.index', compact('users'));
     }
 

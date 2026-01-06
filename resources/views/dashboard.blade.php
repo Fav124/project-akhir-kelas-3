@@ -84,52 +84,66 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Top 5 Santri Sakit List -->
+    <!-- Health Statistics Chart (Chart.js) -->
     <div class="lg:col-span-2 bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h3 class="text-lg font-bold text-text-main dark:text-white">Top 5 Santri Sering Sakit</h3>
-                <p class="text-sm text-text-muted">Berdasarkan data bulan ini</p>
+                <h3 class="text-lg font-bold text-text-main dark:text-white">Statistik Kesehatan</h3>
+                <p class="text-sm text-text-muted">Tren Santri Sakit (7 Hari Terakhir)</p>
             </div>
+            <!-- Functional filter stub -->
+            <select class="form-select text-sm rounded-lg border-gray-200 dark:border-gray-700 bg-transparent text-text-main dark:text-white focus:border-primary focus:ring-primary">
+                <option>Minggu Ini</option>
+            </select>
         </div>
         
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-                <thead class="text-xs text-text-muted uppercase bg-gray-50 dark:bg-gray-800/50">
-                    <tr>
-                        <th class="px-4 py-3 rounded-l-lg">Santri</th>
-                        <th class="px-4 py-3">Kelas</th>
-                        <th class="px-4 py-3 rounded-r-lg text-center">Jumlah Sakit</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($topSantriSakit as $item)
-                    <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                        <td class="px-4 py-3 font-medium text-text-main dark:text-white flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                {{ substr($item->nama_lengkap, 0, 1) }}
-                            </div>
-                            {{ $item->nama_lengkap }}
-                        </td>
-                        <td class="px-4 py-3 text-text-muted">{{ $item->nama_kelas ?? '-' }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                {{ $item->sakit_count }}x
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="3" class="px-4 py-6 text-center text-text-muted">Belum ada data bulan ini</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <div class="relative h-64 w-full">
+            <canvas id="healthChart"></canvas>
+        </div>
+        
+        <!-- Top 5 Santri Table -->
+        <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+             <h4 class="text-md font-bold text-text-main dark:text-white mb-4">Top 5 Santri Sering Sakit</h4>
+             <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-text-muted uppercase bg-gray-50 dark:bg-gray-800/50">
+                        <tr>
+                            <th class="px-4 py-3 rounded-l-lg">Santri</th>
+                            <th class="px-4 py-3">Kelas</th>
+                            <th class="px-4 py-3 rounded-r-lg text-center">Jumlah Sakit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($topSantriSakit as $item)
+                        <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                            <td class="px-4 py-3 font-medium text-text-main dark:text-white flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                    {{ substr($item->nama_lengkap, 0, 1) }}
+                                </div>
+                                {{ $item->nama_lengkap }}
+                            </td>
+                            <td class="px-4 py-3 text-text-muted">{{ $item->nama_kelas ?? '-' }}</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    {{ $item->sakit_count }}x
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="3" class="px-4 py-6 text-center text-text-muted">Belum ada data bulan ini</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="lg:col-span-1">
-        <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm h-full">
+    <!-- Medicine Alerts Section (Right Column) -->
+    <div class="lg:col-span-1 space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <h3 class="text-lg font-bold text-text-main dark:text-white mb-6">Aksi Cepat</h3>
             <div class="flex flex-col gap-3">
                 <a href="{{ route('santri.create') }}" class="flex items-center gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:border-primary hover:bg-primary/5 transition-all group text-left">
@@ -170,6 +184,112 @@
                 </a>
             </div>
         </div>
+
+        <!-- Medicine Alerts -->
+        @if($obatStokRendahList->count() > 0 || $obatMendekatiKadaluarsa->count() > 0)
+        <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+            <h3 class="text-lg font-bold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-red-500">warning</span>
+                Perhatian Obat
+            </h3>
+            
+            @if($obatStokRendahList->count() > 0)
+            <div class="mb-4">
+                <h4 class="text-xs font-bold text-text-muted uppercase mb-2">Stok Menipis ({{ $obatStokRendah }})</h4>
+                <div class="space-y-2">
+                    @foreach($obatStokRendahList as $obat)
+                    <div class="flex justify-between items-center p-2 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/20">
+                        <div>
+                            <p class="text-sm font-medium text-text-main dark:text-white">{{ $obat->nama_obat }}</p>
+                            <p class="text-xs text-red-500">Sisa: {{ $obat->stok }} {{ $obat->satuan }}</p>
+                        </div>
+                        <a href="{{ route('obat.show', $obat->id) }}" class="text-xs text-primary hover:underline">Cek</a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            @if($obatMendekatiKadaluarsa->count() > 0)
+            <div>
+                <h4 class="text-xs font-bold text-text-muted uppercase mb-2">Mendekati Expired ({{ $obatKadaluarsa }})</h4>
+                <div class="space-y-2">
+                    @foreach($obatMendekatiKadaluarsa as $obat)
+                    <div class="flex justify-between items-center p-2 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-100 dark:border-orange-900/20">
+                        <div>
+                            <p class="text-sm font-medium text-text-main dark:text-white">{{ $obat->nama_obat }}</p>
+                            <p class="text-xs text-orange-500">Exp: {{ \Carbon\Carbon::parse($obat->tanggal_kadaluarsa)->format('d M Y') }}</p>
+                        </div>
+                        <a href="{{ route('obat.show', $obat->id) }}" class="text-xs text-primary hover:underline">Cek</a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('healthChart').getContext('2d');
+        const healthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @json($chartLabels),
+                datasets: [{
+                    label: 'Jumlah Santri Sakit',
+                    data: @json($chartData),
+                    borderColor: '#13ec80',
+                    backgroundColor: 'rgba(19, 236, 128, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#13ec80',
+                    pointHoverBackgroundColor: '#13ec80',
+                    pointHoverBorderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            precision: 0
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    });
+</script>
+@endpush

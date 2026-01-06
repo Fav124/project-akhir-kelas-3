@@ -18,10 +18,10 @@ class SakitSantriFactory extends Factory
     public function definition()
     {
         $startDate = $this->faker->dateTimeBetween('-3 months', 'now');
-        $isRecovered = $this->faker->boolean(80); // 80% chance recovered
+        $statusRandom = $this->faker->randomElement(['sakit', 'sembuh', 'sehat']);
 
-        $endDate = $isRecovered 
-            ? $this->faker->dateTimeBetween($startDate, Carbon::parse($startDate)->addDays(rand(1, 14))) 
+        $endDate = in_array($statusRandom, ['sembuh', 'sehat'])
+            ? $this->faker->dateTimeBetween($startDate, Carbon::parse($startDate)->addDays(rand(1, 14)))
             : null;
 
         return [
@@ -35,7 +35,7 @@ class SakitSantriFactory extends Factory
             'tindakan' => $this->faker->sentence(),
             'resep_obat' => $this->faker->words(3, true),
             'suhu_tubuh' => $this->faker->randomFloat(1, 36, 40),
-            'status' => $isRecovered ? 'sembuh' : 'sakit',
+            'status' => $statusRandom,
             'tingkat_kondisi' => $this->faker->randomElement(['ringan', 'sedang', 'berat']),
             'catatan' => $this->faker->sentence(),
         ];
@@ -51,7 +51,7 @@ class SakitSantriFactory extends Factory
         return $this->afterCreating(function ($sakit) {
             // Attach 1-3 random obats
             $obats = Obat::inRandomOrder()->limit(rand(1, 3))->get();
-            foreach($obats as $obat) {
+            foreach ($obats as $obat) {
                 $sakit->obats()->attach($obat->id, [
                     'jumlah' => rand(1, 3),
                     'dosis' => '3x1',

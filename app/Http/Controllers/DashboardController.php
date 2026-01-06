@@ -73,6 +73,15 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Chart Data (Last 7 Days)
+        $chartLabels = [];
+        $chartData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $chartLabels[] = $date->format('D'); // Mon, Tue, etc.
+            $chartData[] = SakitSantri::whereDate('tanggal_mulai_sakit', $date->toDateString())->count();
+        }
+
         return view('dashboard', compact(
             'totalSantri',
             'totalKelas',
@@ -87,7 +96,9 @@ class DashboardController extends Controller
             'topSantriSakit',
             'obatMendekatiKadaluarsa',
             'obatStokRendahList',
-            'recentSakit'
+            'recentSakit',
+            'chartLabels',
+            'chartData'
         ));
     }
 

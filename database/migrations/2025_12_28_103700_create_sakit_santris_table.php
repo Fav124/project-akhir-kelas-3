@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('tindakan');
             $table->text('resep_obat');
             $table->decimal('suhu_tubuh', 4, 1)->nullable();
-            $table->enum('status', ['sakit', 'sembuh', 'kontrol'])->default('sakit');
+            $table->enum('status', ['sakit', 'sembuh', 'kontrol', 'sehat'])->default('sakit');
             $table->text('catatan')->nullable();
             $table->timestamps();
         });
