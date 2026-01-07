@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasActivityLog;
+
 class Kelas extends Model
 {
-    use HasFactory;
+    use HasFactory, HasActivityLog;
 
     protected $table = 'kelas';
 
@@ -17,11 +19,11 @@ class Kelas extends Model
     ];
 
     /**
-     * Get the jurusan that owns this kelas
+     * Relasi many-to-many dengan jurusan
      */
-    public function jurusan()
+    public function jurusans()
     {
-        return $this->belongsTo(Jurusan::class);
+        return $this->belongsToMany(Jurusan::class, 'jurusan_kelas', 'kelas_id', 'jurusan_id')->withTimestamps();
     }
 
     /**
@@ -38,9 +40,17 @@ class Kelas extends Model
     public function getFullNameAttribute(): string
     {
         $name = $this->nama_kelas;
-        if ($this->jurusan) {
-            $name .= ' - ' . $this->jurusan->nama;
+        if ($this->jurusans->count() > 0) {
+            $name .= ' (' . $this->jurusans->pluck('nama')->implode(', ') . ')';
         }
         return $name;
+    }
+
+    /**
+     * Deskripsi untuk activity log
+     */
+    public function getActivityDescription(): string
+    {
+        return "Kelas: {$this->nama_kelas}";
     }
 }

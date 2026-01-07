@@ -17,11 +17,11 @@ class Jurusan extends Model
     ];
 
     /**
-     * Get all kelas in this jurusan
+     * Relasi many-to-many dengan kelas
      */
     public function kelas()
     {
-        return $this->hasMany(Kelas::class);
+        return $this->belongsToMany(Kelas::class, 'jurusan_kelas', 'jurusan_id', 'kelas_id')->withTimestamps();
     }
 
     /**

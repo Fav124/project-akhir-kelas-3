@@ -51,6 +51,10 @@
                     <p class="text-3xl font-bold text-text-main dark:text-white">{{ $obat->stok }} <span class="text-sm font-medium text-text-muted">{{ $obat->satuan }}</span></p>
                 </div>
                 <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-left">
+                    <p class="text-xs text-text-muted uppercase font-bold mb-1">Total Terpakai</p>
+                    <p class="text-2xl font-bold text-primary">{{ $obat->total_terpakai }} <span class="text-sm font-medium text-text-muted">{{ $obat->satuan }}</span></p>
+                </div>
+                <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-left">
                     <p class="text-xs text-text-muted uppercase font-bold mb-1">Harga Satuan</p>
                     <p class="text-text-main dark:text-white font-medium">Rp {{ number_format($obat->harga_satuan ?? 0, 0, ',', '.') }}</p>
                 </div>

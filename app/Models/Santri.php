@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasActivityLog;
+
 class Santri extends Model
 {
-    use HasFactory;
+    use HasFactory, HasActivityLog;
     
     protected $table = 'santris';
 
@@ -111,5 +113,13 @@ class Santri extends Model
             return $this->kelas->full_name;
         }
         return '-';
+    }
+
+    /**
+     * Deskripsi untuk activity log
+     */
+    public function getActivityDescription(): string
+    {
+        return "Santri: {$this->nama_lengkap} ({$this->nis})";
     }
 }

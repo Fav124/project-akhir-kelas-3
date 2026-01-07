@@ -41,6 +41,7 @@
                                 </th>
                                 <th class="px-6 py-4 text-left text-sm font-semibold text-text-main dark:text-gray-300">Nama
                                     Kelas</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-text-main dark:text-gray-300">Jurusan</th>
                                 <th class="px-6 py-4 text-center text-sm font-semibold text-text-main dark:text-gray-300">
                                     Aksi</th>
                             </tr>
@@ -52,6 +53,17 @@
                                         {{ $loop->iteration }}</td>
                                     <td class="px-6 py-4 text-sm text-text-main dark:text-gray-300 font-medium">
                                         {{ $item->nama_kelas }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @forelse($item->jurusans as $j)
+                                                <span class="px-2.5 py-1 text-xs font-bold bg-primary/10 text-primary border border-primary/20 rounded-full">
+                                                    {{ $j->nama }}
+                                                </span>
+                                            @empty
+                                                <span class="text-xs text-text-muted italic">Tidak ada jurusan</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex items-center justify-center gap-2">
                                             <a href="{{ route('kelas.edit', $item->id) }}"

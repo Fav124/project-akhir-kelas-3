@@ -21,7 +21,7 @@ class SakitController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = SakitSantri::with(['santri', 'santri.kelas', 'obats'])->orderBy('tanggal_mulai_sakit', 'desc');
+            $query = SakitSantri::with(['santri', 'santri.kelas', 'obats'])->orderBy('id', 'desc');
 
             // Filter Status
             if ($request->has('filter_status') && !empty($request->filter_status)) {
@@ -44,7 +44,7 @@ class SakitController extends Controller
         }
 
         $sakit = SakitSantri::with(['santri', 'santri.kelas', 'obats'])
-            ->orderBy('tanggal_mulai_sakit', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('sakit.index', compact('sakit'));
@@ -58,7 +58,8 @@ class SakitController extends Controller
         $santri = Santri::all();
         $obats = Obat::all();
         $allDiagnoses = Diagnosis::all();
-        return view('sakit.create', compact('santri', 'obats', 'allDiagnoses'));
+        $kelas = Kelas::all();
+        return view('sakit.create', compact('santri', 'obats', 'allDiagnoses', 'kelas'));
     }
 
     // ========================
@@ -229,15 +230,21 @@ class SakitController extends Controller
                 }
 
                 // Simpan obat jika ada
-                if (isset($data['obat_data']) && is_array($data['obat_data'])) {
-                    foreach ($data['obat_data'] as $obatData) {
-                        $sakit->obats()->attach($obatData['obat_id'], [
-                            'jumlah' => $obatData['jumlah'] ?? 1,
-                            'dosis' => $obatData['dosis'] ?? null,
-                            'keterangan' => $obatData['keterangan'] ?? null
-                        ]);
+            if (isset($data['obat_data']) && is_array($data['obat_data'])) {
+                foreach ($data['obat_data'] as $obatData) {
+                    $sakit->obats()->attach($obatData['obat_id'], [
+                        'jumlah' => $obatData['jumlah'] ?? 1,
+                        'dosis' => $obatData['dosis'] ?? null,
+                        'keterangan' => $obatData['keterangan'] ?? null
+                    ]);
+
+                    // Deduct stock
+                    $obat = Obat::find($obatData['obat_id']);
+                    if ($obat) {
+                        $obat->reduceStock($obatData['jumlah'] ?? 1);
                     }
                 }
+            }
 
                 $savedCount++;
             }
@@ -259,17 +266,52 @@ class SakitController extends Controller
         $request->validate([
             'santri_id' => 'required|exists:santris,id',
             'tanggal_mulai_sakit' => 'required|date',
-            'diagnosis' => 'required|string',
             'gejala' => 'required|string',
             'tindakan' => 'required|string',
             'resep_obat' => 'required|string',
             'suhu_tubuh' => 'nullable|numeric',
             'status' => 'required|in:sakit,sembuh,kontrol',
             'tanggal_selesai_sakit' => 'nullable|date',
-            'catatan' => 'nullable|string'
+            'catatan' => 'nullable|string',
+            'diagnoses' => 'nullable|array',
+            'obat_data' => 'nullable|array'
         ]);
 
-        $sakit = SakitSantri::create($request->all());
+        $data = $request->all();
+        $diagnosesNames = $request->input('diagnoses', []);
+        $data['diagnosis'] = implode(', ', $diagnosesNames);
+        $data['user_id'] = auth()->id();
+
+        $sakit = SakitSantri::create($data);
+
+        // Sync Diagnoses (Tags)
+        if (!empty($diagnosesNames)) {
+            $diagnosisIds = [];
+            foreach ($diagnosesNames as $name) {
+                $diag = Diagnosis::firstOrCreate(['nama' => trim($name)]);
+                $diagnosisIds[] = $diag->id;
+            }
+            $sakit->diagnoses()->sync($diagnosisIds);
+        }
+
+        // Simpan obat dan potong stok
+        if ($request->has('obat_data')) {
+            foreach ($request->input('obat_data') as $item) {
+                if (!empty($item['obat_id'])) {
+                    $sakit->obats()->attach($item['obat_id'], [
+                        'jumlah' => $item['jumlah'] ?? 0,
+                        'dosis' => $item['dosis'] ?? null,
+                        'keterangan' => $item['keterangan'] ?? null,
+                    ]);
+                    
+                    // Potong stok
+                    $obat = Obat::find($item['obat_id']);
+                    if ($obat) {
+                        $obat->reduceStock($item['jumlah'] ?? 0);
+                    }
+                }
+            }
+        }
 
         // Update santri status to 'sakit'
         Santri::find($request->santri_id)->update(['status' => 'sakit']);
@@ -312,12 +354,13 @@ class SakitController extends Controller
             'status' => 'required|in:sakit,sembuh,kontrol',
             'tanggal_selesai_sakit' => 'nullable|date',
             'catatan' => 'nullable|string',
-            'diagnoses' => 'nullable|array'
+            'diagnoses' => 'nullable|array',
+            'obat_data' => 'nullable|array'
         ]);
 
         $data = $request->all();
         $diagnosesNames = $request->input('diagnoses', []);
-        $data['diagnosis'] = implode(', ', $diagnosesNames); // Store a comma-separated list of diagnoses in the original column for backward compatibility
+        $data['diagnosis'] = implode(', ', $diagnosesNames); 
 
         $sakit->update($data);
 
@@ -328,6 +371,33 @@ class SakitController extends Controller
             $diagnosisIds[] = $diag->id;
         }
         $sakit->diagnoses()->sync($diagnosisIds);
+
+        // --- STOCK MANAGEMENT ---
+        // 1. Restore previous stock and usage counts for this record before update
+        foreach ($sakit->obats as $oldObat) {
+            $oldObat->restoreStock($oldObat->pivot->jumlah);
+        }
+
+        // 3. Sync Medicines and deduct new stock
+        $medicines = [];
+        if ($request->has('obat_data')) {
+            foreach ($request->input('obat_data') as $item) {
+                if (!empty($item['obat_id'])) {
+                    $medicines[$item['obat_id']] = [
+                        'jumlah' => $item['jumlah'] ?? 0,
+                        'dosis' => $item['dosis'] ?? null,
+                        'keterangan' => $item['keterangan'] ?? null,
+                    ];
+                    
+                    // Deduct new stock
+                    $newObat = Obat::find($item['obat_id']);
+                    if ($newObat) {
+                        $newObat->reduceStock($item['jumlah'] ?? 0);
+                    }
+                }
+            }
+        }
+        $sakit->obats()->sync($medicines);
 
         return redirect()->route('sakit.index')
             ->with('success', 'Data sakit berhasil diperbarui!');
@@ -354,6 +424,11 @@ class SakitController extends Controller
     // ========================
     public function destroy(SakitSantri $sakit)
     {
+        // Restore stock before deleting the record
+        foreach ($sakit->obats as $obat) {
+            $obat->restoreStock($obat->pivot->jumlah);
+        }
+
         $sakit->delete();
         return redirect()->route('sakit.index')->with('success', 'Data sakit santri berhasil dihapus');
     }

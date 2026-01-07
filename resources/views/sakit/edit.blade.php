@@ -50,7 +50,7 @@
                     <div>
                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Tanggal Mulai Sakit</label>
                         <input type="date" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary @error('tanggal_mulai_sakit') border-red-500 @enderror" 
-                               name="tanggal_mulai_sakit" value="{{ old('tanggal_mulai_sakit', $sakit->tanggal_mulai_sakit) }}" required>
+                               name="tanggal_mulai_sakit" value="{{ old('tanggal_mulai_sakit', $sakit->tanggal_mulai_sakit?->format('Y-m-d')) }}" required>
                         @error('tanggal_mulai_sakit')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -101,10 +101,27 @@
                     </div>
 
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Resep Obat (Deskripsi)</label>
+                        <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Resep Obat (Deskripsi / Text)</label>
                         <textarea class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" 
                                   rows="2" name="resep_obat" required>{{ old('resep_obat', $sakit->resep_obat) }}</textarea>
-                        <p class="text-xs text-text-muted mt-1">Edit obat detail belum tersedia. Ubah deskripsi ini jika ada perubahan obat.</p>
+                    </div>
+
+                    <!-- Detail Obat Section -->
+                    <div class="md:col-span-2 space-y-4">
+                        <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-2">
+                            <h3 class="text-md font-bold text-text-main dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">medication</span>
+                                Detail Obat (Sistem)
+                            </h3>
+                            <button type="button" onclick="addObatRow()" class="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-sm">add_box</span>
+                                Tambah Obat
+                            </button>
+                        </div>
+                        
+                        <div id="obatContainer" class="space-y-3">
+                            <!-- Selected medicines will appear here -->
+                        </div>
                     </div>
 
                     <div>
@@ -116,7 +133,7 @@
                      <div>
                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Tanggal Selesai Sakit</label>
                         <input type="date" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" 
-                               name="tanggal_selesai_sakit" value="{{ old('tanggal_selesai_sakit', $sakit->tanggal_selesai_sakit) }}">
+                               name="tanggal_selesai_sakit" value="{{ old('tanggal_selesai_sakit', $sakit->tanggal_selesai_sakit?->format('Y-m-d')) }}">
                     </div>
 
                     <div class="md:col-span-2">
@@ -267,5 +284,170 @@
     // Set initial tags from existing data
     const initialTags = @json($sakit->diagnoses->pluck('nama'));
     diagnosisTags.setTags(initialTags);
+
+    /* =========================
+       SEARCHABLE SELECT COMPONENT
+    ========================= */
+    class SearchableSelect {
+        constructor(selectElement, options = {}) {
+            this.select = selectElement;
+            this.options = {
+                placeholder: options.placeholder || 'Pilih...',
+                emptyText: options.emptyText || '-- Pilih --',
+                noResultsText: options.noResultsText || 'Tidak ada hasil found',
+                ...options
+            };
+            this.wrapper = null;
+            this.input = null;
+            this.dropdown = null;
+            this.originalOptions = Array.from(this.select.options)
+                .map(opt => ({ value: opt.value, text: opt.text }))
+                .filter(opt => opt.value !== "");
+            
+            this.init();
+        }
+
+        init() {
+            this.select.classList.add('hidden');
+            this.wrapper = document.createElement('div');
+            this.wrapper.className = 'relative searchable-select-wrapper w-full';
+            
+            const currentText = this.select.options[this.select.selectedIndex]?.text || this.options.emptyText;
+            
+            this.wrapper.innerHTML = `
+                <div class="flex items-center justify-between w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white cursor-pointer select-trigger">
+                    <span class="truncate text-sm flex-1 selected-text">${currentText}</span>
+                    <span class="material-symbols-outlined text-lg text-text-muted">expand_more</span>
+                </div>
+                <div class="absolute z-[60] mt-1 w-full bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl hidden select-dropdown">
+                    <div class="p-2 border-b border-gray-100 dark:border-gray-800">
+                        <input type="text" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded border-none focus:ring-1 focus:ring-primary text-sm search-input" placeholder="${this.options.placeholder}">
+                    </div>
+                    <ul class="max-h-60 overflow-y-auto py-1 options-list">
+                        <li class="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm text-text-muted" data-value="">${this.options.emptyText}</li>
+                        ${this.originalOptions.map(opt => `<li class="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm font-medium" data-value="${opt.value}">${opt.text}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+
+            this.select.parentNode.insertBefore(this.wrapper, this.select);
+            this.trigger = this.wrapper.querySelector('.select-trigger');
+            this.dropdown = this.wrapper.querySelector('.select-dropdown');
+            this.input = this.wrapper.querySelector('.search-input');
+            this.list = this.wrapper.querySelector('.options-list');
+            this.selectedSpan = this.wrapper.querySelector('.selected-text');
+
+            this.trigger.onclick = (e) => {
+                e.stopPropagation();
+                this.toggle();
+            };
+            
+            this.input.onclick = (e) => e.stopPropagation();
+            this.input.oninput = () => this.filter();
+            
+            this.list.onclick = (e) => {
+                const li = e.target.closest('li');
+                if (li) {
+                    this.setValue(li.dataset.value);
+                    this.close();
+                }
+            };
+
+            document.addEventListener('click', () => this.close());
+        }
+
+        toggle() {
+            const isHidden = this.dropdown.classList.contains('hidden');
+            document.querySelectorAll('.select-dropdown').forEach(d => d.classList.add('hidden'));
+            if (isHidden) {
+                this.dropdown.classList.remove('hidden');
+                this.input.focus();
+            }
+        }
+
+        close() {
+            this.dropdown.classList.add('hidden');
+            this.input.value = '';
+            this.filter();
+        }
+
+        filter() {
+            const term = this.input.value.toLowerCase();
+            const items = this.list.querySelectorAll('li');
+            items.forEach(li => {
+                const text = li.textContent.toLowerCase();
+                li.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+
+        setValue(val) {
+            this.select.value = val;
+            const opt = this.originalOptions.find(o => o.value == val);
+            this.selectedSpan.textContent = opt ? opt.text : this.options.emptyText;
+            this.select.dispatchEvent(new Event('change'));
+        }
+    }
+
+    /* =========================
+       MEDICINE ROW MANAGEMENT
+    ========================= */
+    const obatList = @json($obats);
+    let obatCounter = 0;
+
+    function addObatRow(initialData = null) {
+        const container = document.getElementById('obatContainer');
+        const rowId = `obat-row-${obatCounter++}`;
+        
+        const div = document.createElement('div');
+        div.id = rowId;
+        div.className = 'p-4 bg-gray-50/50 dark:bg-gray-800/20 rounded-xl border border-gray-100 dark:border-gray-800 group relative animate-slide-up';
+        
+        div.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="md:col-span-1">
+                    <label class="block text-[10px] font-bold text-text-muted uppercase mb-1">Pilih Obat</label>
+                    <select name="obat_data[${obatCounter}][obat_id]" class="obat-select" required>
+                        <option value="">-- Pilih Obat --</option>
+                        ${obatList.map(o => `<option value="${o.id}" ${initialData && initialData.id == o.id ? 'selected' : ''}>${o.nama_obat} (${o.satuan})</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-text-muted uppercase mb-1">Jumlah</label>
+                    <input type="number" name="obat_data[${obatCounter}][jumlah]" value="${initialData ? (initialData.pivot?.jumlah || initialData.jumlah || '') : ''}" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-sm" placeholder="Contoh: 10" required>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-text-muted uppercase mb-1">Dosis (Opsional)</label>
+                    <input type="text" name="obat_data[${obatCounter}][dosis]" value="${initialData ? (initialData.pivot?.dosis || initialData.dosis || '') : ''}" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-sm" placeholder="Contoh: 3x1">
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold text-text-muted uppercase mb-1">Keterangan</label>
+                        <input type="text" name="obat_data[${obatCounter}][keterangan]" value="${initialData ? (initialData.pivot?.keterangan || initialData.keterangan || '') : ''}" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-sm" placeholder="Sesudah makan">
+                    </div>
+                    <button type="button" onclick="removeObatRow('${rowId}')" class="mb-0.5 p-2 text-red-400 hover:text-red-600 transition-colors">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(div);
+        new SearchableSelect(div.querySelector('.obat-select'), { placeholder: 'Cari obat...' });
+    }
+
+    function removeObatRow(id) {
+        const el = document.getElementById(id);
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
+        setTimeout(() => el.remove(), 200);
+    }
+
+    // Load initial medicines
+    document.addEventListener('DOMContentLoaded', () => {
+        const currentObats = @json($sakit->obats);
+        if (currentObats.length > 0) {
+            currentObats.forEach(o => addObatRow(o));
+        }
+    });
     </script>
 @endsection

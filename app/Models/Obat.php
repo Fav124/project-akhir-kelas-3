@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
+use App\Traits\HasActivityLog;
+
 class Obat extends Model
 {
-    use HasFactory;
+    use HasFactory, HasActivityLog;
 
     protected $table = 'obats';
 
@@ -20,14 +22,16 @@ class Obat extends Model
         'satuan',
         'stok_minimum',
         'harga_satuan',
-        'tanggal_kadaluarsa'
+        'tanggal_kadaluarsa',
+        'total_terpakai'
     ];
 
     protected $casts = [
         'stok' => 'integer',
         'stok_minimum' => 'integer',
         'harga_satuan' => 'decimal:2',
-        'tanggal_kadaluarsa' => 'date'
+        'tanggal_kadaluarsa' => 'date',
+        'total_terpakai' => 'integer'
     ];
 
     /**
@@ -115,9 +119,19 @@ class Obat extends Model
     {
         if ($this->stok >= $amount) {
             $this->decrement('stok', $amount);
+            $this->increment('total_terpakai', $amount);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Restore stock and decrease usage count
+     */
+    public function restoreStock($amount): void
+    {
+        $this->increment('stok', $amount);
+        $this->decrement('total_terpakai', $amount);
     }
 
     /**
@@ -137,5 +151,13 @@ class Obat extends Model
             return asset('storage/' . $this->foto);
         }
         return null;
+    }
+
+    /**
+     * Deskripsi untuk activity log
+     */
+    public function getActivityDescription(): string
+    {
+        return "Obat: {$this->nama_obat}";
     }
 }

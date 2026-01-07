@@ -51,11 +51,18 @@
 
                     <div>
                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Kelas</label>
-                        <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="kelas_id" id="kelas_id" required>
+                        <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="kelas_id" id="kelas_id" onchange="fetchJurusans(this.value)" required>
                             <option value="" disabled selected>-- Pilih Kelas --</option>
                             @foreach ($kelas as $k)
                                 <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
                             @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Jurusan</label>
+                        <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed" name="jurusan_id" id="jurusan_id" disabled required>
+                            <option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>
                         </select>
                     </div>
 
@@ -297,6 +304,8 @@
                 .then(data => {
                     if (data.success) {
                         form.reset();
+                        document.getElementById('jurusan_id').innerHTML = '<option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>';
+                        document.getElementById('jurusan_id').disabled = true;
                         fotoPreview.classList.add('hidden');
                         document.getElementById('edit_id').value = '';
                         document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
@@ -435,6 +444,9 @@
                     document.getElementById('wali_tanggal_lahir').value = d.wali_tanggal_lahir;
                     document.getElementById('alamat').value = d.alamat;
 
+                    // Fetch jurusans and then select the value
+                    fetchJurusans(d.kelas_id, d.jurusan_id);
+
                     document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>UPDATE DRAFT</span>';
                     document.getElementById('btnCancel').classList.remove('hidden');
 
@@ -446,6 +458,8 @@
 
         function cancelEdit() {
             form.reset();
+            document.getElementById('jurusan_id').innerHTML = '<option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>';
+            document.getElementById('jurusan_id').disabled = true;
             fotoPreview.classList.add('hidden');
             document.getElementById('edit_id').value = '';
             document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
@@ -547,6 +561,35 @@
                 resultsEl.classList.add('hidden');
             }
         });
+
+        async function fetchJurusans(kelasId, selectedJurusanId = null) {
+            const jurusanSelect = document.getElementById('jurusan_id');
+            if (!kelasId) {
+                jurusanSelect.innerHTML = '<option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>';
+                jurusanSelect.disabled = true;
+                return;
+            }
+
+            jurusanSelect.disabled = true;
+            jurusanSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+
+            try {
+                const res = await fetch(`{{ route('santri.getJurusans') }}?kelas_id=${kelasId}`);
+                const jurusans = await res.json();
+
+                if (jurusans.length > 0) {
+                    jurusanSelect.innerHTML = '<option value="" disabled selected>-- Pilih Jurusan --</option>' +
+                        jurusans.map(j => `<option value="${j.id}" ${selectedJurusanId == j.id ? 'selected' : ''}>${j.nama}</option>`).join('');
+                    jurusanSelect.disabled = false;
+                } else {
+                    jurusanSelect.innerHTML = '<option value="" disabled selected>Tidak ada jurusan tersedia</option>';
+                    jurusanSelect.disabled = true;
+                }
+            } catch (e) {
+                showAlert("Gagal memuat data jurusan", "danger");
+                jurusanSelect.innerHTML = '<option value="" disabled selected>Error memuat data</option>';
+            }
+        }
 
         document.addEventListener("DOMContentLoaded", renderAutosave);
     </script>

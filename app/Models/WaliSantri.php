@@ -20,4 +20,8 @@ class WaliSantri extends Model
         'no_hp',
         'alamat'
     ];
+
+    protected $casts = [
+        'tanggal_lahir' => 'date'
+    ];
 }

@@ -19,8 +19,13 @@ class RiwayatPemeriksaan extends Model
         'status_kondisi'
     ];
 
+    protected $casts = [
+        'tanggal_pemeriksaan' => 'date',
+        'suhu_tubuh' => 'decimal:1'
+    ];
+
     public function santri()
     {
-        return $this->hasMany(Santri::class);;
+        return $this->belongsTo(Santri::class);
     }
 }

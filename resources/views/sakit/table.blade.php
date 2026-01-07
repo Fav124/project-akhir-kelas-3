@@ -70,6 +70,12 @@
                         </form>
                         @endif
                         
+                        @if($item->status != 'sembuh')
+                        <a href="{{ route('sakit.edit', $item->id) }}" class="p-2 text-green-600 hover:bg-green-50 rounded-lg dark:text-green-400 dark:hover:bg-green-900/20 transition-colors" title="Tambah Obat">
+                            <span class="material-symbols-outlined text-[20px]">medication</span>
+                        </a>
+                        @endif
+
                         <a href="{{ route('sakit.show', $item->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors" title="Detail">
                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                         </a>

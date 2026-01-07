@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasActivityLog;
+
 class SakitSantri extends Model
 {
-    use HasFactory;
+    use HasFactory, HasActivityLog;
 
     protected $table = 'sakit_santris';
 
@@ -147,5 +149,14 @@ class SakitSantri extends Model
     public function scopeToday($query)
     {
         return $query->whereDate('tanggal_mulai_sakit', today());
+    }
+
+    /**
+     * Deskripsi untuk activity log
+     */
+    public function getActivityDescription(): string
+    {
+        $santriName = $this->santri ? $this->santri->nama_lengkap : 'N/A';
+        return "Catatan Sakit: {$santriName} (Status: {$this->status})";
     }
 }

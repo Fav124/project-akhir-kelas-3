@@ -53,7 +53,7 @@
                     <label class="form-label fw-semibold">Tanggal Pemeriksaan</label>
                     <input type="date" class="form-control @error('tanggal_pemeriksaan') is-invalid @enderror"
                         id="tanggal_pemeriksaan" name="tanggal_pemeriksaan"
-                        value="{{ old('tanggal_pemeriksaan', $laporan->tanggal_pemeriksaan) }}" required>
+                        value="{{ old('tanggal_pemeriksaan', $laporan->tanggal_pemeriksaan ? $laporan->tanggal_pemeriksaan->format('Y-m-d') : '') }}" required>
                     @error('tanggal_pemeriksaan')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror

@@ -31,6 +31,13 @@
                     class="material-symbols-outlined {{ request()->routeIs('kelas.*') ? '' : 'text-gray-400 group-hover:text-primary' }}">class</span>
                 <span>Data Kelas</span>
             </a>
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors group {{ request()->routeIs('diagnosis.*') ? 'bg-primary/10 text-primary' : 'text-text-main dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50' }}"
+                href="{{ route('diagnosis.index') }}">
+                <span
+                    class="material-symbols-outlined {{ request()->routeIs('diagnosis.*') ? '' : 'text-gray-400 group-hover:text-primary' }}">stethoscope</span>
+                <span>Data Diagnosis</span>
+            </a>
         @endif
 
         <a class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors group {{ request()->routeIs('santri.*') ? 'bg-primary/10 text-primary' : 'text-text-main dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50' }}"
@@ -62,6 +69,13 @@
             <span
                 class="material-symbols-outlined {{ request()->routeIs('laporan.*') ? '' : 'text-gray-400 group-hover:text-primary' }}">description</span>
             <span>Laporan</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors group {{ request()->routeIs('history.*') ? 'bg-primary/10 text-primary' : 'text-text-main dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50' }}"
+            href="{{ route('history.index') }}">
+            <span
+                class="material-symbols-outlined {{ request()->routeIs('history.*') ? '' : 'text-gray-400 group-hover:text-primary' }}">history</span>
+            <span>Riwayat Aktivitas</span>
         </a>
     </nav>
     <div class="p-4 border-t border-gray-200 dark:border-gray-800">

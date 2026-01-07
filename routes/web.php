@@ -9,7 +9,8 @@ use App\Http\Controllers\{
     LaporanController,
     UserController,
     JurusanController,
-    DiagnosisController
+    DiagnosisController,
+    HistoryController
 };
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +65,8 @@ Route::prefix('santri')->name('santri.')->group(function () {
     Route::get('/create', [SantriController::class, 'create'])->name('create');
     // Search API for typeahead
     Route::get('/search', [SantriController::class, 'search'])->name('search');
+    Route::get('/get-jurusans', [SantriController::class, 'getJurusansByKelas'])->name('getJurusans');
+    Route::get('/get-by-filter', [SantriController::class, 'getSantriByFilter'])->name('getSantriByFilter');
     Route::post('/save', [SantriController::class, 'save'])->name('save');
 
     // 🔥 AUTOSAVE
@@ -181,3 +184,5 @@ Route::prefix('laporan')->name('laporan.')->group(function () {
     Route::put('/{laporan}', [LaporanController::class, 'update'])->name('update');
     Route::delete('/{laporan}', [LaporanController::class, 'destroy'])->name('destroy');
 });
+
+Route::get('/history', [HistoryController::class, 'index'])->name('history.index');

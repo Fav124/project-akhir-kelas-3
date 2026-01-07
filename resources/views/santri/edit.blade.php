@@ -77,7 +77,7 @@
                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Kelas</label>
                         <div class="relative">
                             <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary appearance-none @error('kelas_id') border-red-500 @enderror" 
-                                    name="kelas_id" required>
+                                    name="kelas_id" id="kelas_id" required onchange="fetchJurusans(this.value)">
                                 <option disabled>-- Pilih Kelas --</option>
                                 @foreach ($kelas as $k)
                                     <option value="{{ $k->id }}" {{ old('kelas_id', $santri->kelas_id) == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
@@ -88,6 +88,22 @@
                             </div>
                         </div>
                         @error('kelas_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Jurusan</label>
+                        <div class="relative">
+                            <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary appearance-none disabled:opacity-50 @error('jurusan_id') border-red-500 @enderror" 
+                                    name="jurusan_id" id="jurusan_id" required>
+                                <option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-muted">
+                                <span class="material-symbols-outlined text-lg">expand_more</span>
+                            </div>
+                        </div>
+                        @error('jurusan_id')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
@@ -104,7 +120,7 @@
                     <div>
                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Tanggal Lahir</label>
                         <input type="date" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary @error('tanggal_lahir') border-red-500 @enderror" 
-                               name="tanggal_lahir" value="{{ old('tanggal_lahir', $santri->tanggal_lahir) }}" required>
+                               name="tanggal_lahir" value="{{ old('tanggal_lahir', $santri->tanggal_lahir ? $santri->tanggal_lahir->format('Y-m-d') : '') }}" required>
                         @error('tanggal_lahir')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -165,7 +181,7 @@
                     <div>
                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Tanggal Lahir Wali</label>
                         <input type="date" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary @error('wali_tanggal_lahir') border-red-500 @enderror" 
-                               name="wali_tanggal_lahir" value="{{ old('wali_tanggal_lahir', $wali->tanggal_lahir ?? '') }}" required>
+                               name="wali_tanggal_lahir" value="{{ old('wali_tanggal_lahir', (isset($wali->tanggal_lahir) && $wali->tanggal_lahir instanceof \Carbon\Carbon) ? $wali->tanggal_lahir->format('Y-m-d') : ($wali->tanggal_lahir ?? '')) }}" required>
                         @error('wali_tanggal_lahir')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -195,3 +211,44 @@
     </div>
 </div>
 @endsection
+
+@push('js')
+<script>
+    async function fetchJurusans(kelasId, selectedJurusanId = null) {
+        const jurusanSelect = document.getElementById('jurusan_id');
+        if (!kelasId) {
+            jurusanSelect.innerHTML = '<option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>';
+            jurusanSelect.disabled = true;
+            return;
+        }
+
+        jurusanSelect.disabled = true;
+        jurusanSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+
+        try {
+            const res = await fetch(`{{ route('santri.getJurusans') }}?kelas_id=${kelasId}`);
+            const jurusans = await res.json();
+
+            if (jurusans.length > 0) {
+                jurusanSelect.innerHTML = '<option value="" disabled selected>-- Pilih Jurusan --</option>' +
+                    jurusans.map(j => `<option value="${j.id}" ${selectedJurusanId == j.id ? 'selected' : ''}>${j.nama}</option>`).join('');
+                jurusanSelect.disabled = false;
+            } else {
+                jurusanSelect.innerHTML = '<option value="" disabled selected>Tidak ada jurusan tersedia</option>';
+                jurusanSelect.disabled = true;
+            }
+        } catch (e) {
+            console.error(e);
+            jurusanSelect.innerHTML = '<option value="" disabled selected>Error memuat data</option>';
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const initialKelas = "{{ old('kelas_id', $santri->kelas_id) }}";
+        const initialJurusan = "{{ old('jurusan_id', $santri->jurusan_id) }}";
+        if (initialKelas) {
+            fetchJurusans(initialKelas, initialJurusan);
+        }
+    });
+</script>
+@endpush

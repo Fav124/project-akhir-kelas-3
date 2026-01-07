@@ -82,8 +82,8 @@ class SantriController extends Controller
             return response()->json([]);
         }
 
-        $results = Santri::select('id', 'nama_lengkap', 'nis', 'kelas_id')
-            ->with('kelas:id,nama_kelas')
+        $results = Santri::select('id', 'nama_lengkap', 'nis', 'kelas_id', 'jurusan_id')
+            ->with(['kelas:id,nama_kelas', 'jurusan:id,nama'])
             ->where('nama_lengkap', 'like', "%{$q}%")
             ->orWhere('nis', 'like', "%{$q}%")
             ->limit(20)
@@ -93,9 +93,43 @@ class SantriController extends Controller
                     'id' => $s->id,
                     'nama_lengkap' => $s->nama_lengkap,
                     'nis' => $s->nis,
-                    'kelas' => $s->kelas->nama_kelas ?? null
+                    'kelas' => $s->kelas->nama_kelas ?? null,
+                    'jurusan' => $s->jurusan->nama ?? null
                 ];
             });
+
+        return response()->json($results);
+    }
+
+    /**
+     * Get available majors for a specific class
+     */
+    public function getJurusansByKelas(Request $request)
+    {
+        $request->validate(['kelas_id' => 'required|exists:kelas,id']);
+        $kelas = Kelas::with('jurusans')->find($request->kelas_id);
+        return response()->json($kelas->jurusans);
+    }
+
+    /**
+     * Get santri by filters (kelas and optional jurusan)
+     */
+    public function getSantriByFilter(Request $request)
+    {
+        $kelasId = $request->get('kelas_id');
+        $jurusanId = $request->get('jurusan_id');
+
+        if (!$kelasId) {
+            return response()->json([]);
+        }
+
+        $query = Santri::where('kelas_id', $kelasId);
+
+        if ($jurusanId) {
+            $query->where('jurusan_id', $jurusanId);
+        }
+
+        $results = $query->select('id', 'nama_lengkap', 'nis')->get();
 
         return response()->json($results);
     }
@@ -110,6 +144,7 @@ class SantriController extends Controller
             'nama_lengkap' => 'required|string',
             'jenis_kelamin' => 'required|string',
             'kelas_id' => 'required|exists:kelas,id',
+            'jurusan_id' => 'nullable|exists:jurusans,id',
             'tempat_lahir' => 'required|string',
             'tanggal_lahir' => 'required|date',
             'nama_wali' => 'required|string',
@@ -231,6 +266,7 @@ class SantriController extends Controller
                     'nama_lengkap' => $validated['nama_lengkap'],
                     'jenis_kelamin' => $validated['jenis_kelamin'],
                     'kelas_id' => $validated['kelas_id'],
+                    'jurusan_id' => $data['jurusan_id'] ?? null,
                     'tempat_lahir' => $validated['tempat_lahir'],
                     'tanggal_lahir' => $validated['tanggal_lahir'],
                     'foto' => $validated['foto'] ?? null,
@@ -332,6 +368,7 @@ class SantriController extends Controller
             'nama_lengkap' => 'required|string',
             'jenis_kelamin' => 'required|string',
             'kelas_id' => 'required|exists:kelas,id',
+            'jurusan_id' => 'nullable|exists:jurusans,id',
             'tempat_lahir' => 'required|string',
             'tanggal_lahir' => 'required|date',
             'nama_wali' => 'required|string',
@@ -349,6 +386,7 @@ class SantriController extends Controller
             'nama_lengkap',
             'jenis_kelamin',
             'kelas_id',
+            'jurusan_id',
             'tempat_lahir',
             'tanggal_lahir'
         );

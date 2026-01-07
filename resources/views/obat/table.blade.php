@@ -8,6 +8,7 @@
                 <th class="px-6 py-4 font-bold" scope="col">Stok</th>
                 <th class="px-6 py-4 font-bold" scope="col">Kadaluarsa</th>
                 <th class="px-6 py-4 font-bold" scope="col">Satuan</th>
+                <th class="px-6 py-4 font-bold" scope="col">Total Terpakai</th>
                 <th class="px-6 py-4 font-bold" scope="col">Harga</th>
                 <th class="px-6 py-4 font-bold rounded-tr-xl text-center" scope="col">Aksi</th>
             </tr>
@@ -52,6 +53,10 @@
                     @endif
                 </td>
                 <td class="px-6 py-4">{{ $item->satuan }}</td>
+                <td class="px-6 py-4">
+                    <span class="font-bold text-primary">{{ $item->total_terpakai }}</span> 
+                    <span class="text-[10px] text-text-muted">{{ $item->satuan }}</span>
+                </td>
                 <td class="px-6 py-4">Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
                 <td class="px-6 py-4">
                     <div class="flex items-center justify-center gap-2">

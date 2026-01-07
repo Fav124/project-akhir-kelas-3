@@ -41,19 +41,33 @@
                 <input type="hidden" name="edit_id" id="edit_id">
 
                 <div class="space-y-6">
-                    <!-- Data Santri Section -->
+                     <!-- Data Santri Section -->
                     <div>
                         <h3 class="font-bold text-text-main dark:text-white mb-4 flex items-center gap-2">
                              <span class="material-symbols-outlined text-primary text-md">person</span>
                             Data Santri
                         </h3>
-                         <div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Filter Kelas</label>
+                                <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" id="filter_kelas" onchange="updateJurusans(this.value)">
+                                    <option value="" selected>-- Semua Kelas --</option>
+                                    @foreach ($kelas as $k)
+                                        <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Filter Jurusan</label>
+                                <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" id="filter_jurusan" onchange="updateSantri()" disabled>
+                                    <option value="" selected>-- Semua Jurusan --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Pilih Santri</label>
                             <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="santri_id" id="santri_id" required>
-                                <option value="" disabled selected>-- Pilih Santri --</option>
-                                @foreach ($santri as $s)
-                                    <option value="{{ $s->id }}">{{ $s->nis }} - {{ $s->nama_lengkap }}</option>
-                                @endforeach
+                                <option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>
                             </select>
                         </div>
                     </div>
@@ -141,7 +155,7 @@
                             <!-- Obat items added here -->
                         </div>
 
-                         <button type="button" class="flex items-center gap-2 px-3 py-1.5 border border-primary text-primary hover:bg-primary/5 rounded-lg text-sm font-medium transition-colors" onclick="addObatRow()">
+                         <button type="button" class="flex items-center gap-2 px-3 py-1.5 border border-primary text-primary hover:bg-primary/5 rounded-lg text-sm font-medium transition-colors" onclick="openObatModal()">
                             <span class="material-symbols-outlined text-lg">add_circle</span>
                             Tambah Obat
                         </button>
@@ -230,6 +244,51 @@
 
     <!-- Alert Box -->
     <div id="alertBox" class="fixed top-6 right-6 z-50 max-w-sm space-y-2"></div>
+
+    <!-- MEDICINE MODAL -->
+    <div id="obatModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[60] p-4">
+        <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-xl max-w-md w-full">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+                <h3 class="text-lg font-bold text-text-main dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">medication</span>
+                    Input Data Obat
+                </h3>
+                <button type="button" onclick="closeObatModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="modal_obat_index" value="">
+                <div>
+                    <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Pilih Obat</label>
+                    <select id="modal_obat_id" class="w-full">
+                        <option value="">-- Pilih Obat --</option>
+                        @foreach($obats as $obat)
+                            <option value="{{ $obat->id }}">{{ $obat->nama_obat }} ({{ $obat->satuan }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Jumlah</label>
+                        <input type="number" id="modal_jumlah" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white" value="1" min="1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Dosis</label>
+                        <input type="text" id="modal_dosis" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white" placeholder="Contoh: 3x1">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Keterangan</label>
+                    <textarea id="modal_keterangan" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white" rows="2" placeholder="Contoh: Sesudah makan"></textarea>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-800 flex gap-3">
+                <button type="button" onclick="closeObatModal()" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-text-main dark:text-white font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Batal</button>
+                <button type="button" onclick="saveObatFromModal()" class="flex-1 px-4 py-2 bg-primary text-white font-bold rounded-lg hover:bg-green-600 transition-colors">Simpan Obat</button>
+            </div>
+        </div>
+    </div>
 
     <script>
     /* =========================
@@ -515,6 +574,19 @@
             }
             this.updateDisplayText();
         }
+
+        refresh() {
+            const activeOption = this.select.options[this.select.selectedIndex];
+            if (activeOption && activeOption.value !== "") {
+                this.selectedValue = activeOption.value;
+                this.selectedLabel = activeOption.text;
+            } else {
+                this.selectedValue = '';
+                this.selectedLabel = '';
+            }
+            this.updateDisplayText();
+            this.renderItems();
+        }
     }
 
     /* =========================
@@ -558,77 +630,123 @@
     }
 
     /* =========================
-       OBAT HANDLER
+       OBAT HANDLER (MODAL BASED)
     ========================= */
-    function addObatRow(data = null) {
-        obatCounter++;
-        const container = document.getElementById('obatContainer');
+    let currentObatData = [];
+    let obatModalSelect = null;
 
-        const row = document.createElement('div');
-        row.className = 'p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 obat-item';
-        row.dataset.id = obatCounter;
+    function openObatModal(index = null) {
+        const modal = document.getElementById('obatModal');
+        const title = modal.querySelector('h3');
+        const modalIndex = document.getElementById('modal_obat_index');
+        const modalObatId = document.getElementById('modal_obat_id');
+        const modalJumlah = document.getElementById('modal_jumlah');
+        const modalDosis = document.getElementById('modal_dosis');
+        const modalKeterangan = document.getElementById('modal_keterangan');
 
-        row.innerHTML = `
-            <div class="flex justify-between items-center mb-3">
-                <h6 class="text-sm font-bold text-primary">Obat #${obatCounter}</h6>
-                <button type="button" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 rounded" onclick="removeObatRow(${obatCounter})">
-                    <span class="material-symbols-outlined text-lg">delete</span>
-                </button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-medium text-text-muted mb-1">Nama Obat</label>
-                    <select class="w-full px-3 py-1.5 border rounded-lg obat-select" name="obat_data[${obatCounter}][obat_id]" required>
-                        <option value="">-- Pilih Obat --</option>
-                        ${obatList.map(obat => `
-                            <option value="${obat.id}" ${data && data.obat_id == obat.id ? 'selected' : ''}>
-                                ${obat.nama_obat}
-                            </option>
-                        `).join('')}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-text-muted mb-1">Jumlah</label>
-                    <input type="number" class="w-full px-3 py-1.5 border rounded-lg" name="obat_data[${obatCounter}][jumlah]" value="${data ? data.jumlah : 1}" min="1" required>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-text-muted mb-1">Dosis</label>
-                    <input type="text" class="w-full px-3 py-1.5 border rounded-lg" name="obat_data[${obatCounter}][dosis]" value="${data ? data.dosis : ''}">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-medium text-text-muted mb-1">Keterangan</label>
-                    <textarea class="w-full px-3 py-1.5 border rounded-lg" rows="2" name="obat_data[${obatCounter}][keterangan]">${data ? data.keterangan : ''}</textarea>
-                </div>
-            </div>
-        `;
-        container.appendChild(row);
+        if (index !== null) {
+            const data = currentObatData[index];
+            title.innerHTML = '<span class="material-symbols-outlined text-primary">edit</span> Edit Data Obat';
+            modalIndex.value = index;
+            modalObatId.value = data.obat_id;
+            modalJumlah.value = data.jumlah;
+            modalDosis.value = data.dosis;
+            modalKeterangan.value = data.keterangan;
+        } else {
+            title.innerHTML = '<span class="material-symbols-outlined text-primary">medication</span> Tambah Data Obat';
+            modalIndex.value = '';
+            modalObatId.value = '';
+            modalJumlah.value = 1;
+            modalDosis.value = '';
+            modalKeterangan.value = '';
+        }
 
-        const select = row.querySelector('.obat-select');
-        new SearchableSelect(select, {
-            placeholder: 'Cari obat...',
-            emptyText: '-- Pilih Obat --'
-        });
+        if (obatModalSelect) {
+            obatModalSelect.setValue(modalObatId.value);
+            obatModalSelect.refresh();
+        }
+
+        modal.classList.remove('hidden');
     }
 
-    function removeObatRow(id) {
-        const item = document.querySelector(`.obat-item[data-id="${id}"]`);
-        if (item) item.remove();
+    function closeObatModal() {
+        document.getElementById('obatModal').classList.add('hidden');
+    }
+
+    function saveObatFromModal() {
+        const index = document.getElementById('modal_obat_index').value;
+        const obatId = document.getElementById('modal_obat_id').value;
+        const jumlah = document.getElementById('modal_jumlah').value;
+        const dosis = document.getElementById('modal_dosis').value;
+        const keterangan = document.getElementById('modal_keterangan').value;
+
+        if (!obatId) {
+            showAlert("Pilih obat terlebih dahulu!", "danger");
+            return;
+        }
+
+        const data = {
+            obat_id: obatId,
+            jumlah: jumlah,
+            dosis: dosis,
+            keterangan: keterangan
+        };
+
+        if (index !== '') {
+            currentObatData[index] = data;
+        } else {
+            currentObatData.push(data);
+        }
+
+        renderObatList();
+        closeObatModal();
+    }
+
+    function removeObat(index) {
+        currentObatData.splice(index, 1);
+        renderObatList();
+    }
+
+    function renderObatList() {
+        const container = document.getElementById('obatContainer');
+        container.innerHTML = '';
+
+        if (currentObatData.length === 0) {
+            container.innerHTML = `
+                <div class="p-4 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-center text-text-muted italic text-sm">
+                    Belum ada obat ditambahkan
+                </div>
+            `;
+            return;
+        }
+
+        currentObatData.forEach((item, index) => {
+            const drug = obatList.find(o => o.id == item.obat_id);
+            const card = document.createElement('div');
+            card.className = 'p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 flex justify-between items-center';
+            card.innerHTML = `
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-sm text-text-main dark:text-white">${drug ? drug.nama_obat : 'N/A'}</span>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded">${item.jumlah} ${drug ? drug.satuan : ''}</span>
+                    </div>
+                    <p class="text-[11px] text-text-muted mt-0.5">Dosis: ${item.dosis || '-'} • ${item.keterangan || '-'}</p>
+                </div>
+                <div class="flex items-center gap-2 ml-4">
+                    <button type="button" onclick="openObatModal(${index})" class="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded">
+                        <span class="material-symbols-outlined text-lg">edit</span>
+                    </button>
+                    <button type="button" onclick="removeObat(${index})" class="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
     }
 
     function collectObatData() {
-        const obatData = [];
-        document.querySelectorAll('.obat-item').forEach(item => {
-            const obatId = item.querySelector('.obat-select').value;
-            if (obatId) {
-                obatData.push({
-                    obat_id: obatId,
-                    jumlah: item.querySelector('input[name*="[jumlah]"]').value,
-                    dosis: item.querySelector('input[name*="[dosis]"]').value,
-                    keterangan: item.querySelector('textarea[name*="[keterangan]"]').value
-                });
-            }
-        });
-        return obatData;
+        return currentObatData;
     }
 
     /* =========================
@@ -695,7 +813,24 @@
         document.getElementById('edit_id').value = '';
         document.getElementById('obatContainer').innerHTML = '';
         obatCounter = 0;
-        if (santriSelect) santriSelect.setValue('');
+        
+        // Reset filters
+        document.getElementById('filter_kelas').value = '';
+        const filterJurusan = document.getElementById('filter_jurusan');
+        filterJurusan.innerHTML = '<option value="" selected>-- Semua Jurusan --</option>';
+        filterJurusan.disabled = true;
+        
+        // Reset santri select
+        document.getElementById('santri_id').innerHTML = '<option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>';
+        if (santriSelect) {
+            santriSelect.setValue('');
+            santriSelect.refresh();
+        }
+        
+        // Reset Obat
+        currentObatData = [];
+        renderObatList();
+        
         if (diagnosisTags) diagnosisTags.clear();
         
         document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
@@ -745,10 +880,16 @@
                                 ${statusBadge}
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <div class="flex justify-center gap-2">
-                                    <button onclick="openDetail('${item.id}')" class="text-blue-600">👁</button>
-                                    <button onclick="editDraft('${item.id}')" class="text-amber-600">✏️</button>
-                                    <button onclick="deleteTemp('${item.id}')" class="text-red-600">🗑</button>
+                                <div class="flex justify-center gap-1">
+                                    <button onclick="openDetail('${item.id}')" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors" title="Detail">
+                                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                    </button>
+                                    <button onclick="editDraft('${item.id}')" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg dark:text-amber-400 dark:hover:bg-amber-900/20 transition-colors" title="Edit">
+                                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                                    </button>
+                                    <button onclick="deleteTemp('${item.id}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg dark:text-red-400 dark:hover:bg-red-900/20 transition-colors" title="Hapus">
+                                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -757,37 +898,148 @@
             });
     }
 
-    function editDraft(id) {
+    function openDetail(id) {
+        const modal = document.getElementById('detailModal');
+        const content = document.getElementById('modalContent');
+        
+        modal.classList.remove('hidden');
+        content.innerHTML = `
+            <div class="flex justify-center py-8">
+                <div class="inline-flex items-center gap-2 text-primary text-sm font-medium">
+                    <span class="material-symbols-outlined animate-spin">refresh</span>
+                    <span>Mengambil data...</span>
+                </div>
+            </div>
+        `;
+
         fetch(`{{ route('sakit.getTemporary') }}?id=${id}`)
             .then(res => res.json())
             .then(d => {
-                document.getElementById('edit_id').value = d.id;
-                
-                if (santriSelect) santriSelect.setValue(d.santri_id);
-                if (diagnosisTags) diagnosisTags.setTags(d.diagnoses);
-                
-                document.getElementById('tanggal_mulai_sakit').value = d.tanggal_mulai_sakit;
-                document.getElementById('gejala').value = d.gejala;
-                document.getElementById('tindakan').value = d.tindakan;
-                document.getElementById('resep_obat').value = d.resep_obat;
-                document.getElementById('suhu_tubuh').value = d.suhu_tubuh || '';
-                document.getElementById('status').value = d.status;
-                document.getElementById('tanggal_selesai_sakit').value = d.tanggal_selesai_sakit || '';
-                document.getElementById('catatan').value = d.catatan || '';
+                const santri = santriList.find(s => s.id == d.santri_id);
+                const diagnoses = d.diagnoses || [];
+                const medicines = d.obat_data || [];
 
-                document.getElementById('obatContainer').innerHTML = '';
-                obatCounter = 0;
-                if (d.obat_data && d.obat_data.length > 0) {
-                    d.obat_data.forEach(obat => addObatRow(obat));
-                }
+                content.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="text-xs font-bold text-text-muted uppercase mb-1">Data Santri</h4>
+                                <p class="text-sm font-bold text-text-main dark:text-white">${santri ? santri.nama_lengkap : 'N/A'}</p>
+                                <p class="text-xs text-text-muted">${santri ? santri.nis : ''}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-text-muted uppercase mb-1">Tanggal & Suhu</h4>
+                                <p class="text-sm text-text-main dark:text-white">${d.tanggal_mulai_sakit} • ${d.suhu_tubuh || '-'} °C</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-text-muted uppercase mb-1">Diagnosis</h4>
+                                <div class="flex flex-wrap gap-1.5 mt-1">
+                                    ${diagnoses.map(tag => `
+                                        <span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded border border-primary/20">${tag}</span>
+                                    `).join('') || '<span class="text-xs italic text-gray-400">Tidak ada tags</span>'}
+                                </div>
+                            </div>
+                        </div>
 
-                document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>UPDATE DRAFT</span>';
-                document.getElementById('btnCancel').classList.remove('hidden');
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="text-xs font-bold text-text-muted uppercase mb-1">Gejala & Tindakan</h4>
+                                <p class="text-sm text-text-main dark:text-white font-medium">Gejala:</p>
+                                <p class="text-xs text-text-muted mb-2">${d.gejala || '-'}</p>
+                                <p class="text-sm text-text-main dark:text-white font-medium">Tindakan:</p>
+                                <p class="text-xs text-text-muted">${d.tindakan || '-'}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-text-muted uppercase mb-1">Resep Obat (Text)</h4>
+                                <p class="text-xs text-text-muted italic">${d.resep_obat || '-'}</p>
+                            </div>
+                        </div>
 
-                if (typeof closeDetailModal === 'function') closeDetailModal();
-                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                showAlert("Mode edit aktif!", "info");
+                        <div class="md:col-span-2">
+                            <h4 class="text-xs font-bold text-text-muted uppercase mb-3 border-b border-gray-100 dark:border-gray-800 pb-2 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">medication</span>
+                                Daftar Obat Terpilih
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                ${medicines.map(m => {
+                                    const drug = obatList.find(o => o.id == m.obat_id);
+                                    return `
+                                        <div class="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                                            <p class="text-sm font-bold text-text-main dark:text-white">${drug ? drug.nama_obat : 'N/A'}</p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-[10px] font-bold px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded">${m.jumlah} ${drug ? drug.satuan : ''}</span>
+                                                <span class="text-[10px] text-text-muted">• ${m.dosis || '-'}</span>
+                                            </div>
+                                            ${m.keterangan ? `<p class="text-xs text-gray-400 mt-2 italic">"${m.keterangan}"</p>` : ''}
+                                        </div>
+                                    `;
+                                }).join('') || '<div class="col-span-full py-4 text-center text-xs italic text-gray-400">Tidak ada obat terpilih</div>'}
+                            </div>
+                        </div>
+
+                        ${d.catatan ? `
+                            <div class="md:col-span-2">
+                                <h4 class="text-xs font-bold text-text-muted uppercase mb-1">Catatan Tambahan</h4>
+                                <p class="text-xs text-text-muted bg-yellow-50 dark:bg-yellow-900/10 p-3 rounded-lg border border-yellow-100 dark:border-yellow-900/20">${d.catatan}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
             });
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    async function editDraft(id) {
+        try {
+            const res = await fetch(`{{ route('sakit.getTemporary') }}?id=${id}`);
+            const d = await res.json();
+            
+            document.getElementById('edit_id').value = d.id;
+            
+            // Set Filters first
+            if (d.santri) {
+                document.getElementById('filter_kelas').value = d.santri.kelas_id || '';
+                await updateJurusans(d.santri.kelas_id);
+                
+                if (d.santri.jurusan_id) {
+                    document.getElementById('filter_jurusan').value = d.santri.jurusan_id;
+                    await updateSantri();
+                }
+                
+                if (santriSelect) {
+                    santriSelect.setValue(d.santri_id);
+                }
+            }
+            
+            if (diagnosisTags) diagnosisTags.setTags(d.diagnoses);
+            
+            document.getElementById('tanggal_mulai_sakit').value = d.tanggal_mulai_sakit;
+            document.getElementById('gejala').value = d.gejala;
+            document.getElementById('tindakan').value = d.tindakan;
+            document.getElementById('resep_obat').value = d.resep_obat;
+            document.getElementById('suhu_tubuh').value = d.suhu_tubuh || '';
+            document.getElementById('status').value = d.status;
+            document.getElementById('tanggal_selesai_sakit').value = d.tanggal_selesai_sakit || '';
+            document.getElementById('catatan').value = d.catatan || '';
+
+            // Set Obat
+            currentObatData = d.obat_data || [];
+            renderObatList();
+
+            document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>UPDATE DRAFT</span>';
+            document.getElementById('btnCancel').classList.remove('hidden');
+
+            closeDetailModal();
+            const formElement = document.getElementById('formSakit');
+            formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            showAlert("Mode edit aktif!", "info");
+        } catch (e) {
+            console.error(e);
+            showAlert("Gagal memuat data draft", "danger");
+        }
     }
 
     function cancelEdit() {
@@ -816,8 +1068,64 @@
         .catch(() => showAlert("Gagal menghapus data!", "danger"));
     }
 
+    async function updateJurusans(kelasId) {
+        const jurusanSelect = document.getElementById('filter_jurusan');
+        if (!kelasId) {
+            jurusanSelect.innerHTML = '<option value="" selected>-- Semua Jurusan --</option>';
+            jurusanSelect.disabled = true;
+            updateSantri();
+            return;
+        }
+
+        jurusanSelect.disabled = true;
+        jurusanSelect.innerHTML = '<option value="" selected>Loading...</option>';
+
+        try {
+            const res = await fetch(`{{ route('santri.getJurusans') }}?kelas_id=${kelasId}`);
+            const jurusans = await res.json();
+
+            jurusanSelect.innerHTML = '<option value="" selected>-- Semua Jurusan --</option>' +
+                jurusans.map(j => `<option value="${j.id}">${j.nama}</option>`).join('');
+            jurusanSelect.disabled = false;
+        } catch (e) {
+            console.error(e);
+            jurusanSelect.innerHTML = '<option value="" selected>Error</option>';
+        }
+        updateSantri();
+    }
+
+    async function updateSantri() {
+        const kelasId = document.getElementById('filter_kelas').value;
+        const jurusanId = document.getElementById('filter_jurusan').value;
+        const santriIdSelect = document.getElementById('santri_id');
+
+        if (!kelasId) {
+            santriIdSelect.innerHTML = '<option value="" disabled selected>-- Pilih Kelas Terlebih Dahulu --</option>';
+            if (santriSelect) santriSelect.refresh();
+            return;
+        }
+
+        try {
+            const res = await fetch(`{{ route('santri.getSantriByFilter') }}?kelas_id=${kelasId}&jurusan_id=${jurusanId}`);
+            const data = await res.json();
+
+            if (data.length > 0) {
+                santriIdSelect.innerHTML = '<option value="" disabled selected>-- Pilih Santri --</option>' +
+                    data.map(s => `<option value="${s.id}">${s.nis} - ${s.nama_lengkap}</option>`).join('');
+            } else {
+                santriIdSelect.innerHTML = '<option value="" disabled selected>Tidak ada santri ditemukan</option>';
+            }
+        } catch (e) {
+            console.error(e);
+            santriIdSelect.innerHTML = '<option value="" disabled selected>Error memuat data</option>';
+        }
+        
+        if (santriSelect) santriSelect.refresh();
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
         renderDrafts();
+        renderObatList();
         
         // Initialize Santri Search
         const sSelect = document.getElementById('santri_id');
@@ -825,6 +1133,15 @@
             santriSelect = new SearchableSelect(sSelect, {
                 placeholder: 'Cari santri...',
                 emptyText: '-- Pilih Santri --'
+            });
+        }
+
+        // Initialize Medicine Modal Search
+        const oSelect = document.getElementById('modal_obat_id');
+        if (oSelect) {
+            obatModalSelect = new SearchableSelect(oSelect, {
+                placeholder: 'Cari obat...',
+                emptyText: '-- Pilih Obat --'
             });
         }
 

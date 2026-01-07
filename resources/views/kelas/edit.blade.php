@@ -48,7 +48,7 @@
                 </label>
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
-                        <span class="material-symbols-outlined text-lg">home</span>
+                        <span class="material-symbols-outlined text-lg" style="color: #64748b;">home</span>
                     </span>
                     <input type="text"
                         class="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors @error('nama_kelas') border-red-500 ring-2 ring-red-500 @enderror"
@@ -61,6 +61,26 @@
                         {{ $message }}
                     </p>
                 @enderror
+            </div>
+
+            <!-- JURUSAN SELECTION (Many-to-Many) -->
+            <div>
+                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-3">
+                    Jurusan / Peminatan
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                    @foreach($jurusans as $j)
+                        <label class="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-primary/50 transition-all group">
+                            <input type="checkbox" name="jurusans[]" value="{{ $j->id }}" 
+                                {{ in_array($j->id, old('jurusans', $kela->jurusans->pluck('id')->toArray())) ? 'checked' : '' }}
+                                class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-text-main dark:text-gray-200 group-hover:text-primary transition-colors">{{ $j->nama }}</span>
+                            </div>
+                        </label>
+                    @endforeach
+                </div>
+                <p class="text-xs text-text-muted mt-2">Pilih satu atau lebih jurusan yang tersedia untuk kelas ini.</p>
             </div>
 
             <!-- BUTTON -->
