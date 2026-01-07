@@ -263,7 +263,7 @@
     $(document).ready(function() {
         // Initialize medicine select
         const mSelect = document.getElementById('modal_obat_id');
-        const medicineSearch = new SearchableSelect(mSelect, {
+        window.medicineSearch = new SearchableSelect(mSelect, {
             placeholder: 'Cari obat...',
             emptyText: '-- Pilih Obat --'
         });
@@ -282,11 +282,14 @@
             const santriName = row.find('td:nth-child(3) .font-medium').text();
             $('#modalSantriName').text('Untuk: ' + santriName);
 
-            // Fetch current medicines
+            // Fetch current medicines for this record
             $.get(`{{ url('sakit') }}/${sakitId}/medicines`, function(data) {
                 window.currentQuickObatData = data;
                 renderQuickObatList();
             });
+
+            // Fetch latest medicine info (stock, etc)
+            window.refreshObatData();
             
             // Reset form
             medicineSearch.setValue('');
@@ -297,6 +300,27 @@
 
         window.closeQuickObatModal = function() {
             $('#quickObatModal').addClass('hidden');
+        }
+
+        window.refreshObatData = function() {
+            return $.get("{{ route('obat.index') }}?json=1", function(data) {
+                window.obatInfo = data;
+                
+                // Update the hidden select options
+                const select = $('#modal_obat_id');
+                const currentValue = select.val();
+                
+                select.empty().append('<option value="" disabled>-- Pilih Obat --</option>');
+                data.forEach(o => {
+                    select.append(`<option value="${o.id}">${o.nama_obat} (Stok: ${o.stok} ${o.satuan})</option>`);
+                });
+                
+                // Refresh searchable select
+                if (window.medicineSearch) {
+                    window.medicineSearch.setValue(currentValue);
+                    window.medicineSearch.refresh();
+                }
+            });
         }
 
         window.addQuickObat = function() {
@@ -385,6 +409,9 @@
                     const filterStatus = $('#filterStatus').val();
                     const page = $('.pagination .active span').text() || 1;
                     fetchData(page, search, filterStatus);
+                    
+                    // Also refresh medicine data in case they open modal elsewhere
+                    window.refreshObatData();
                 },
                 error: function() {
                     Toast.fire({ icon: 'error', title: 'Gagal menyimpan data.' });

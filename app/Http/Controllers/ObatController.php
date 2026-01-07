@@ -12,12 +12,12 @@ class ObatController extends Controller
         $this->middleware('auth');
     }
 
-    // ========================
-    // 📍 INDEX
-    // ========================
     public function index(Request $request)
     {
         if ($request->ajax()) {
+            if ($request->has('json')) {
+                return response()->json(Obat::orderBy('nama_obat', 'asc')->get());
+            }
             $query = Obat::orderBy('nama_obat', 'asc');
 
             // Search
