@@ -563,6 +563,7 @@ class ComposerStaticInitc61ff82cbf0142a401a48a8161e1595a
         'App\\Http\\Middleware\\VerifyCsrfToken' => __DIR__ . '/../..' . '/app/Http/Middleware/VerifyCsrfToken.php',
         'App\\Http\\Requests\\StoreKelasRequest' => __DIR__ . '/../..' . '/app/Http/Requests/StoreKelasRequest.php',
         'App\\Http\\Requests\\UpdateKelasRequest' => __DIR__ . '/../..' . '/app/Http/Requests/UpdateKelasRequest.php',
+        'App\\Models\\Diagnosis' => __DIR__ . '/../..' . '/app/Models/Diagnosis.php',
         'App\\Models\\InfoKesehatanSantri' => __DIR__ . '/../..' . '/app/Models/InfoKesehatanSantri.php',
         'App\\Models\\Jurusan' => __DIR__ . '/../..' . '/app/Models/Jurusan.php',
         'App\\Models\\Kelas' => __DIR__ . '/../..' . '/app/Models/Kelas.php',

@@ -80,9 +80,9 @@
             
             @if($sakit->status == 'sakit')
             <div class="mt-6">
-                <form action="{{ route('sakit.markRecovered', $sakit->id) }}" method="POST" class="w-full">
+                <form action="{{ route('sakit.sembuh', $sakit->id) }}" method="POST" class="w-full">
                     @csrf
-                    @method('PATCH')
+                    @method('PUT')
                     <button type="submit" class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold shadow-lg shadow-green-500/20 transition-all active:scale-95">
                         <span class="material-symbols-outlined">check_circle</span>
                         Tandai Sembuh
@@ -104,10 +104,18 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-text-muted uppercase mb-1">Diagnosis Utama</label>
-                    <p class="text-lg font-medium text-text-main dark:text-white bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                        {{ $sakit->diagnosis }}
-                    </p>
+                    <label class="block text-xs font-bold text-text-muted uppercase mb-1">Diagnosis</label>
+                    <div class="flex flex-wrap gap-2 mt-1">
+                        @forelse($sakit->diagnoses as $diag)
+                            <span class="px-3 py-1 bg-primary/10 text-primary text-sm font-bold rounded-lg border border-primary/20">
+                                {{ $diag->nama }}
+                            </span>
+                        @empty
+                            <p class="text-lg font-medium text-text-main dark:text-white bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700 w-full">
+                                {{ $sakit->diagnosis ?? '-' }}
+                            </p>
+                        @endforelse
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-text-muted uppercase mb-1">Gejala</label>

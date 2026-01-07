@@ -74,8 +74,15 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Diagnosis Penyakit</label>
-                                <input type="text" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Contoh: Flu, Demam, Diare" name="diagnosis" id="diagnosis" required>
+                                <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Diagnosis Penyakit (Tags)</label>
+                                <div id="diagnosisTagInput" class="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus-within:ring-2 focus-within:ring-primary min-h-[42px] flex flex-wrap gap-2 items-center">
+                                    <!-- Tags will be rendered here -->
+                                    <input type="text" id="tagInput" class="flex-1 bg-transparent border-none outline-none text-sm min-w-[120px]" placeholder="Ketik & tekan Enter untuk tambah tag...">
+                                </div>
+                                <div id="tagSuggestions" class="absolute z-50 mt-1 w-full max-w-md bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl hidden overflow-hidden">
+                                     <!-- Suggestions will be rendered here -->
+                                </div>
+                                <p class="text-xs text-text-muted mt-1 italic">Ketik diagnosis (misal: Demam) lalu tekan Enter. Anda bisa menambah lebih dari satu tag.</p>
                             </div>
 
                             <div>
@@ -225,392 +232,606 @@
     <div id="alertBox" class="fixed top-6 right-6 z-50 max-w-sm space-y-2"></div>
 
     <script>
-        const santriList = @json($santri);
-        const obatList = @json($obats);
-        const form = document.getElementById('formSakit');
-        let obatCounter = 0;
-
-        function showAlert(message, type = "success") {
-            const box = document.getElementById("alertBox");
-            const id = "alert-" + Date.now();
-            const bgClass = {
-                'success': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700',
-                'danger': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700',
-                'question': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700',
-                'warning': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700',
-                'secondary': 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-            }[type] || 'bg-blue-100';
-
-            const icon = {
-                'success': 'check_circle',
-                'danger': 'error',
-                'question': 'info',
-                'warning': 'warning',
-                'secondary': 'check'
-            }[type] || 'info';
-
-            const alert = `
-                <div id="${id}" class="p-4 border rounded-lg shadow-sm ${bgClass} flex items-start gap-3 animate-in slide-in-from-top">
-                    <span class="material-symbols-outlined flex-shrink-0 mt-0.5">${icon}</span>
-                    <p class="flex-1 text-sm font-medium">${message}</p>
-                    <button type="button" onclick="document.getElementById('${id}').remove()" class="flex-shrink-0 opacity-70 hover:opacity-100">
-                        <span class="material-symbols-outlined text-lg">close</span>
-                    </button>
-                </div>
-            `;
-            box.insertAdjacentHTML("beforeend", alert);
-            setTimeout(() => {
-                const el = document.getElementById(id);
-                if (el) el.remove();
-            }, 3500);
+    /* =========================
+       TAG INPUT FOR DIAGNOSIS
+    ========================= */
+    class TagInput {
+        constructor(containerId, inputId, suggestionsId) {
+            this.container = document.getElementById(containerId);
+            this.input = document.getElementById(inputId);
+            this.suggestions = document.getElementById(suggestionsId);
+            this.tags = [];
+            this.init();
         }
 
-        function addObatRow(data = null) {
-            obatCounter++;
-            const container = document.getElementById('obatContainer');
-
-            const row = document.createElement('div');
-            row.className = 'p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 obat-item';
-            row.dataset.id = obatCounter;
-
-            row.innerHTML = `
-                <div class="flex justify-between items-center mb-3">
-                    <h6 class="text-sm font-bold text-primary">Obat #${obatCounter}</h6>
-                    <button type="button" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 rounded transition-colors" onclick="removeObatRow(${obatCounter})">
-                        <span class="material-symbols-outlined text-lg">delete</span>
-                    </button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="col-span-1 md:col-span-2">
-                        <label class="block text-xs font-medium text-text-muted mb-1">Nama Obat</label>
-                        <select class="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary obat-select" name="obat_data[${obatCounter}][obat_id]" required>
-                            <option value="">-- Pilih Obat --</option>
-                            ${obatList.map(obat => `
-                                <option value="${obat.id}" ${data && data.obat_id == obat.id ? 'selected' : ''}>
-                                    ${obat.nama_obat}
-                                </option>
-                            `).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-text-muted mb-1">Jumlah</label>
-                        <input type="number" class="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                            name="obat_data[${obatCounter}][jumlah]"
-                            value="${data ? data.jumlah : 1}" min="1" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-text-muted mb-1">Dosis</label>
-                        <input type="text" class="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                            name="obat_data[${obatCounter}][dosis]"
-                            value="${data ? data.dosis : ''}"
-                            placeholder="3x sehari">
-                    </div>
-                    <div class="col-span-1 md:col-span-2">
-                        <label class="block text-xs font-medium text-text-muted mb-1">Keterangan</label>
-                        <textarea class="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary" rows="2"
-                            name="obat_data[${obatCounter}][keterangan]"
-                            placeholder="Diminum setelah makan...">${data ? data.keterangan : ''}</textarea>
-                    </div>
-                </div>
-            `;
-            container.appendChild(row);
-        }
-
-        function removeObatRow(id) {
-            const item = document.querySelector(`.obat-item[data-id="${id}"]`);
-            if (item) item.remove();
-        }
-
-        function collectObatData() {
-            const obatData = [];
-            const items = document.querySelectorAll('.obat-item');
-            items.forEach(item => {
-                const obatId = item.querySelector('.obat-select').value;
-                const jumlah = item.querySelector('input[name*="[jumlah]"]').value;
-                const dosis = item.querySelector('input[name*="[dosis]"]').value;
-                const keterangan = item.querySelector('textarea[name*="[keterangan]"]').value;
-
-                if (obatId) {
-                    obatData.push({
-                        obat_id: obatId,
-                        jumlah: jumlah,
-                        dosis: dosis,
-                        keterangan: keterangan
-                    });
+        init() {
+            this.input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = this.input.value.trim();
+                    if (val) this.addTag(val);
+                } else if (e.key === 'Backspace' && !this.input.value && this.tags.length > 0) {
+                    this.removeTag(this.tags.length - 1);
                 }
             });
-            return obatData;
+
+            this.input.addEventListener('input', () => {
+                const val = this.input.value.trim();
+                if (val.length >= 2) {
+                    this.fetchSuggestions(val);
+                } else {
+                    this.hideSuggestions();
+                }
+            });
+
+            // Prevent closing when clicking inside
+            this.container.addEventListener('click', () => this.input.focus());
+            document.addEventListener('click', (e) => {
+                if (!this.container.contains(e.target) && !this.suggestions.contains(e.target)) {
+                    this.hideSuggestions();
+                }
+            });
         }
 
-        function addToTemporary() {
-            if (!form.checkValidity()) {
-                form.reportValidity();
+        async fetchSuggestions(q) {
+            try {
+                const res = await fetch(`{{ route('diagnosis.search') }}?q=${q}`);
+                const data = await res.json();
+                this.renderSuggestions(data);
+            } catch (e) {
+                console.error("Failed to fetch suggestions", e);
+            }
+        }
+
+        renderSuggestions(items) {
+            if (!items.length) {
+                this.hideSuggestions();
                 return;
             }
 
-            const fd = new FormData(form);
-            const editId = document.getElementById('edit_id').value;
-            const obatData = collectObatData();
-            const url = editId ? "{{ route('sakit.updateTemporary') }}" : "{{ route('sakit.storeTemporary') }}";
-            const method = editId ? "PUT" : "POST";
+            this.suggestions.innerHTML = items.map(item => `
+                <div class="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm font-medium border-b border-gray-100 dark:border-gray-800 last:border-0" data-nama="${item.nama}">
+                    ${item.nama}
+                </div>
+            `).join('');
 
-            const data = {
-                santri_id: fd.get('santri_id'),
-                tanggal_mulai_sakit: fd.get('tanggal_mulai_sakit'),
-                diagnosis: fd.get('diagnosis'),
-                gejala: fd.get('gejala'),
-                tindakan: fd.get('tindakan'),
-                resep_obat: fd.get('resep_obat'),
-                suhu_tubuh: fd.get('suhu_tubuh'),
-                status: fd.get('status'),
-                tanggal_selesai_sakit: fd.get('tanggal_selesai_sakit'),
-                catatan: fd.get('catatan'),
-                obat_data: obatData
-            };
-            if (editId) data.edit_id = editId;
-
-            fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        form.reset();
-                        document.getElementById('edit_id').value = '';
-                        document.getElementById('obatContainer').innerHTML = '';
-                        obatCounter = 0;
-                        document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
-                        document.getElementById('btnCancel').classList.add('hidden');
-                        renderDrafts();
-                        showAlert(result.message || "Data berhasil disimpan! 🎉", "success");
-                    }
-                })
-                .catch(() => showAlert("Gagal menyimpan data!", "danger"));
-        }
-
-        function renderDrafts() {
-            fetch("{{ route('sakit.getTemporary') }}")
-                .then(res => res.json())
-                .then(data => {
-                    const table = document.getElementById("draftTable");
-                    const countBadge = document.getElementById("draftCount");
-                    const btnSaveAll = document.getElementById("btnSaveAll");
-
-                    countBadge.textContent = data.length;
-                    btnSaveAll.disabled = data.length === 0;
-
-                    if (!data.length) {
-                        table.innerHTML = `
-                            <tr><td colspan="3" class="px-6 py-8 text-center text-text-muted dark:text-gray-400">
-                                <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 block mb-2">inbox</span>
-                                Belum ada data
-                            </td></tr>`;
-                        return;
-                    }
-
-                    table.innerHTML = data.map(item => {
-                        const santri = santriList.find(s => s.id == item.santri_id);
-                        const statusColor = item.status === 'sakit' ? 'red' : (item.status === 'sembuh' ? 'green' : 'amber');
-                        const statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800 capitalize">${item.status}</span>`;
-
-                        return `
-                             <tr class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50">
-                                <td class="px-6 py-4">
-                                     <div class="font-medium text-text-main dark:text-white">${santri ? santri.nama_lengkap : 'N/A'}</div>
-                                    <div class="text-xs text-text-muted">${santri ? santri.nis : ''}</div>
-                                </td>
-                                <td class="px-6 py-4 text-text-main dark:text-gray-300">
-                                    <div class="mb-1">${item.diagnosis}</div>
-                                    ${statusBadge}
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <button class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors" onclick='openDetail(${JSON.stringify(item.id)})'>
-                                            <span class="material-symbols-outlined text-lg">visibility</span>
-                                        </button>
-                                        <button class="p-2 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors" onclick='editDraft(${JSON.stringify(item.id)})'>
-                                            <span class="material-symbols-outlined text-lg">edit</span>
-                                        </button>
-                                        <button class="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors" onclick='deleteTemp(${JSON.stringify(item.id)})'>
-                                            <span class="material-symbols-outlined text-lg">delete</span>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
+            this.suggestions.querySelectorAll('div').forEach(div => {
+                div.addEventListener('click', () => {
+                    this.addTag(div.dataset.nama);
+                    this.hideSuggestions();
                 });
+            });
+
+            this.suggestions.classList.remove('hidden');
         }
 
-        function openDetail(id) {
-             document.getElementById('detailModal').classList.remove('hidden');
-             document.body.style.overflow = 'hidden';
+        hideSuggestions() {
+            this.suggestions.classList.add('hidden');
+        }
 
-            fetch(`{{ route('sakit.getTemporary') }}?id=${id}`)
-                .then(res => res.json())
-                 .then(d => {
-                    const santri = santriList.find(s => s.id == d.santri_id);
-                     const statusColor = d.status === 'sakit' ? 'red' : (d.status === 'sembuh' ? 'green' : 'amber');
-                    const statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800 capitalize">${d.status}</span>`;
+        addTag(val) {
+            if (this.tags.includes(val)) {
+                this.input.value = '';
+                return;
+            }
+            this.tags.push(val);
+            this.render();
+            this.input.value = '';
+        }
 
-                    let obatHTML = '';
-                    if (d.obat_data && d.obat_data.length > 0) {
-                        obatHTML = '<h6 class="text-sm font-bold text-primary mt-6 mb-3 border-b border-gray-200 dark:border-gray-700 pb-2">Obat yang Digunakan</h6><div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
-                        d.obat_data.forEach(obat => {
-                            const obatInfo = obatList.find(o => o.id == obat.obat_id);
-                            obatHTML += `
-                                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                                    <h6 class="font-bold text-text-main dark:text-white mb-2">${obatInfo ? obatInfo.nama_obat : 'N/A'}</h6>
-                                    <div class="space-y-1 text-sm text-text-muted dark:text-gray-400">
-                                         <p><span class="font-medium">Jumlah:</span> ${obat.jumlah}</p>
-                                         <p><span class="font-medium">Dosis:</span> ${obat.dosis || '-'}</p>
-                                         ${obat.keterangan ? `<p class="italic text-xs mt-1">"${obat.keterangan}"</p>` : ''}
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        obatHTML += '</div>';
-                    }
+        removeTag(index) {
+            this.tags.splice(index, 1);
+            this.render();
+        }
 
-                     document.getElementById("modalContent").innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-4">
-                                <h4 class="text-sm font-bold text-primary border-b border-gray-200 dark:border-gray-700 pb-2">Data Santri</h4>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">NIS</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${santri ? santri.nis : 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Nama</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${santri ? santri.nama_lengkap : 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Kelas</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${santri && santri.kelas ? santri.kelas.nama_kelas : 'N/A'}</p>
-                                </div>
-                            </div>
-                             <div class="space-y-4">
-                                <h4 class="text-sm font-bold text-primary border-b border-gray-200 dark:border-gray-700 pb-2">Data Penyakit</h4>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Diagnosis</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.diagnosis}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Status</p>
-                                    <div class="mt-1">${statusBadge}</div>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Tanggal Mulai</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.tanggal_mulai_sakit}</p>
-                                </div>
-                            </div>
-                        </div>
+        render() {
+            // Keep input at the end
+            const input = this.input;
+            this.container.innerHTML = '';
+            this.tags.forEach((tag, index) => {
+                const badge = document.createElement('span');
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-bold border border-primary/20';
+                badge.innerHTML = `
+                    ${tag}
+                    <button type="button" class="hover:text-red-500 flex items-center" onclick="diagnosisTags.removeTag(${index})">
+                        <span class="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                `;
+                this.container.appendChild(badge);
+            });
+            this.container.appendChild(input);
+            input.focus();
+        }
 
-                         <div class="mt-6 space-y-4">
-                             <div>
-                                <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Gejala</p>
-                                <p class="text-sm text-text-main dark:text-white mt-1">${d.gejala}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Tindakan</p>
-                                <p class="text-sm text-text-main dark:text-white mt-1">${d.tindakan}</p>
-                            </div>
-                             <div>
-                                <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Resep (Deskripsi)</p>
-                                <p class="text-sm text-text-main dark:text-white mt-1">${d.resep_obat}</p>
-                            </div>
-                        </div>
+        setTags(tags) {
+            this.tags = tags || [];
+            this.render();
+        }
 
-                        ${obatHTML}
+        getTags() {
+            return this.tags;
+        }
 
-                         <div class="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                             <button class="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors" onclick='editDraft("${d.id}")'>
-                                <span class="material-symbols-outlined text-lg">edit</span>
-                                <span>Edit</span>
-                            </button>
-                             <button class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors" onclick='deleteTemp("${d.id}")'>
-                                <span class="material-symbols-outlined text-lg">delete</span>
-                                <span>Hapus</span>
-                            </button>
-                        </div>
+        clear() {
+            this.tags = [];
+            this.render();
+        }
+    }
+
+    let diagnosisTags = null;
+    const santriList = @json($santri);
+    const obatList = @json($obats);
+    const form = document.getElementById('formSakit');
+    let obatCounter = 0;
+    let santriSelect = null;
+
+    /* =========================
+       CUSTOM SEARCHABLE SELECT
+    ========================= */
+    class SearchableSelect {
+        constructor(selectElement, options = {}) {
+            this.select = selectElement;
+            this.options = options;
+            this.placeholder = options.placeholder || 'Cari...';
+            this.container = null;
+            this.searchInput = null;
+            this.dropdown = null;
+            this.itemsContainer = null;
+            this.isOpen = false;
+            this.selectedValue = this.select.value;
+            this.selectedLabel = '';
+
+            const activeOption = this.select.options[this.select.selectedIndex];
+            if (activeOption && activeOption.value !== "") {
+                this.selectedLabel = activeOption.text;
+            }
+
+            this.init();
+        }
+
+        init() {
+            this.select.classList.add('hidden');
+
+            this.container = document.createElement('div');
+            this.container.className = 'relative custom-searchable-select';
+            this.select.parentNode.insertBefore(this.container, this.select.nextSibling);
+
+            this.display = document.createElement('div');
+            this.display.className = 'w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer flex justify-between items-center';
+            this.updateDisplayText();
+            this.container.appendChild(this.display);
+
+            this.dropdown = document.createElement('div');
+            this.dropdown.className = 'absolute z-[60] mt-1 w-full bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl hidden overflow-hidden flex flex-col max-h-72';
+
+            const searchWrapper = document.createElement('div');
+            searchWrapper.className = 'p-2 border-b border-gray-100 dark:border-gray-700 sticky top-0 bg-surface-light dark:bg-surface-dark';
+            this.searchInput = document.createElement('input');
+            this.searchInput.type = 'text';
+            this.searchInput.placeholder = this.placeholder;
+            this.searchInput.className = 'w-full px-3 py-1.5 text-sm border border-gray-100 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary';
+            searchWrapper.appendChild(this.searchInput);
+            this.dropdown.appendChild(searchWrapper);
+
+            this.itemsContainer = document.createElement('div');
+            this.itemsContainer.className = 'overflow-y-auto flex-1';
+            this.dropdown.appendChild(this.itemsContainer);
+
+            this.container.appendChild(this.dropdown);
+
+            this.display.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggle();
+            });
+
+            this.searchInput.addEventListener('input', (e) => {
+                this.filter(e.target.value);
+            });
+
+            this.searchInput.addEventListener('click', (e) => e.stopPropagation());
+            document.addEventListener('click', () => this.close());
+
+            this.renderItems();
+        }
+
+        updateDisplayText() {
+            this.display.innerHTML = `
+                <span class="${this.selectedValue ? '' : 'text-text-muted'} truncate">
+                    ${this.selectedLabel || (this.options.emptyText || '-- Pilih --')}
+                </span>
+                <span class="material-symbols-outlined text-gray-400">expand_more</span>
+            `;
+        }
+
+        renderItems(filterText = '') {
+            this.itemsContainer.innerHTML = '';
+            const options = Array.from(this.select.options).filter(opt => opt.value !== "");
+
+            let found = false;
+            options.forEach(opt => {
+                if (opt.text.toLowerCase().includes(filterText.toLowerCase())) {
+                    const item = document.createElement('div');
+                    item.className = `px-4 py-2.5 text-sm cursor-pointer hover:bg-primary/10 transition-colors 
+                        ${this.selectedValue == opt.value ? 'bg-primary/5 font-bold text-primary' : 'text-text-main dark:text-gray-300'}`;
+                    item.textContent = opt.text;
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.selectItem(opt.value, opt.text);
+                    });
+                    this.itemsContainer.appendChild(item);
+                    found = true;
+                }
+            });
+
+            if (!found) {
+                const empty = document.createElement('div');
+                empty.className = 'px-4 py-8 text-center text-xs text-text-muted italic';
+                empty.textContent = 'Data tidak ditemukan';
+                this.itemsContainer.appendChild(empty);
+            }
+        }
+
+        selectItem(value, label) {
+            this.selectedValue = value;
+            this.selectedLabel = label;
+            this.select.value = value;
+            this.select.dispatchEvent(new Event('change', { bubbles: true }));
+            this.updateDisplayText();
+            this.close();
+        }
+
+        filter(text) {
+            this.renderItems(text);
+        }
+
+        toggle() {
+            if (this.isOpen) this.close();
+            else this.open();
+        }
+
+        open() {
+            document.querySelectorAll('.custom-searchable-select .absolute').forEach(d => d.classList.add('hidden'));
+            this.dropdown.classList.remove('hidden');
+            this.isOpen = true;
+            this.searchInput.value = '';
+            this.renderItems();
+            setTimeout(() => this.searchInput.focus(), 50);
+        }
+
+        close() {
+            this.dropdown.classList.add('hidden');
+            this.isOpen = false;
+        }
+
+        setValue(value) {
+            this.select.value = value;
+            const opt = Array.from(this.select.options).find(o => o.value == value);
+            if (opt) {
+                this.selectedValue = value;
+                this.selectedLabel = opt.text;
+            } else {
+                this.selectedValue = '';
+                this.selectedLabel = '';
+            }
+            this.updateDisplayText();
+        }
+    }
+
+    /* =========================
+       ALERT
+    ========================= */
+    function showAlert(message, type = "success") {
+        const box = document.getElementById("alertBox");
+        const id = "alert-" + Date.now();
+        const bgClass = {
+            'success': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700',
+            'danger': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700',
+            'question': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700',
+            'warning': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700',
+            'secondary': 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700',
+            'info': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
+        }[type] || 'bg-blue-100';
+
+        const icon = {
+            'success': 'check_circle',
+            'danger': 'error',
+            'question': 'info',
+            'warning': 'warning',
+            'secondary': 'check',
+            'info': 'info'
+        }[type] || 'info';
+
+        const alert = `
+            <div id="${id}" class="p-4 border rounded-lg shadow-sm ${bgClass} flex items-start gap-3">
+                <span class="material-symbols-outlined flex-shrink-0 mt-0.5">${icon}</span>
+                <p class="flex-1 text-sm font-medium">${message}</p>
+                <button type="button" onclick="document.getElementById('${id}').remove()" class="flex-shrink-0 opacity-70 hover:opacity-100">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+        `;
+        box.insertAdjacentHTML("beforeend", alert);
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }, 3500);
+    }
+
+    /* =========================
+       OBAT HANDLER
+    ========================= */
+    function addObatRow(data = null) {
+        obatCounter++;
+        const container = document.getElementById('obatContainer');
+
+        const row = document.createElement('div');
+        row.className = 'p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 obat-item';
+        row.dataset.id = obatCounter;
+
+        row.innerHTML = `
+            <div class="flex justify-between items-center mb-3">
+                <h6 class="text-sm font-bold text-primary">Obat #${obatCounter}</h6>
+                <button type="button" class="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 rounded" onclick="removeObatRow(${obatCounter})">
+                    <span class="material-symbols-outlined text-lg">delete</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium text-text-muted mb-1">Nama Obat</label>
+                    <select class="w-full px-3 py-1.5 border rounded-lg obat-select" name="obat_data[${obatCounter}][obat_id]" required>
+                        <option value="">-- Pilih Obat --</option>
+                        ${obatList.map(obat => `
+                            <option value="${obat.id}" ${data && data.obat_id == obat.id ? 'selected' : ''}>
+                                ${obat.nama_obat}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-text-muted mb-1">Jumlah</label>
+                    <input type="number" class="w-full px-3 py-1.5 border rounded-lg" name="obat_data[${obatCounter}][jumlah]" value="${data ? data.jumlah : 1}" min="1" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-text-muted mb-1">Dosis</label>
+                    <input type="text" class="w-full px-3 py-1.5 border rounded-lg" name="obat_data[${obatCounter}][dosis]" value="${data ? data.dosis : ''}">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium text-text-muted mb-1">Keterangan</label>
+                    <textarea class="w-full px-3 py-1.5 border rounded-lg" rows="2" name="obat_data[${obatCounter}][keterangan]">${data ? data.keterangan : ''}</textarea>
+                </div>
+            </div>
+        `;
+        container.appendChild(row);
+
+        const select = row.querySelector('.obat-select');
+        new SearchableSelect(select, {
+            placeholder: 'Cari obat...',
+            emptyText: '-- Pilih Obat --'
+        });
+    }
+
+    function removeObatRow(id) {
+        const item = document.querySelector(`.obat-item[data-id="${id}"]`);
+        if (item) item.remove();
+    }
+
+    function collectObatData() {
+        const obatData = [];
+        document.querySelectorAll('.obat-item').forEach(item => {
+            const obatId = item.querySelector('.obat-select').value;
+            if (obatId) {
+                obatData.push({
+                    obat_id: obatId,
+                    jumlah: item.querySelector('input[name*="[jumlah]"]').value,
+                    dosis: item.querySelector('input[name*="[dosis]"]').value,
+                    keterangan: item.querySelector('textarea[name*="[keterangan]"]').value
+                });
+            }
+        });
+        return obatData;
+    }
+
+    /* =========================
+       SUBMIT TEMPORARY
+    ========================= */
+    function addToTemporary() {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const fd = new FormData(form);
+        const editId = document.getElementById('edit_id').value;
+        const obatData = collectObatData();
+        const diagnoses = diagnosisTags.getTags();
+
+        if (diagnoses.length === 0) {
+            showAlert("Minimal harus ada satu diagnosis penyakit!", "warning");
+            return;
+        }
+
+        const url = editId ? "{{ route('sakit.updateTemporary') }}" : "{{ route('sakit.storeTemporary') }}";
+
+        const data = {
+            santri_id: fd.get('santri_id'),
+            tanggal_mulai_sakit: fd.get('tanggal_mulai_sakit'),
+            gejala: fd.get('gejala'),
+            tindakan: fd.get('tindakan'),
+            resep_obat: fd.get('resep_obat'),
+            suhu_tubuh: fd.get('suhu_tubuh'),
+            status: fd.get('status'),
+            tanggal_selesai_sakit: fd.get('tanggal_selesai_sakit'),
+            catatan: fd.get('catatan'),
+            obat_data: obatData,
+            diagnoses: diagnoses
+        };
+
+        if (editId) {
+            data.edit_id = editId;
+            data._method = "PUT";
+        }
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                resetForm();
+                renderDrafts();
+                showAlert(result.message || "Data berhasil disimpan! 🎉", "success");
+            }
+        })
+        .catch(() => showAlert("Gagal menyimpan data!", "danger"));
+    }
+
+    function resetForm() {
+        form.reset();
+        document.getElementById('edit_id').value = '';
+        document.getElementById('obatContainer').innerHTML = '';
+        obatCounter = 0;
+        if (santriSelect) santriSelect.setValue('');
+        if (diagnosisTags) diagnosisTags.clear();
+        
+        document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
+        document.getElementById('btnCancel').classList.add('hidden');
+    }
+
+    /* =========================
+       DRAFT LIST
+    ========================= */
+    function renderDrafts() {
+        fetch("{{ route('sakit.getTemporary') }}")
+            .then(res => res.json())
+            .then(data => {
+                const table = document.getElementById("draftTable");
+                const countBadge = document.getElementById("draftCount");
+                const btnSaveAll = document.getElementById("btnSaveAll");
+
+                countBadge.textContent = data.length;
+                btnSaveAll.disabled = data.length === 0;
+
+                if (!data.length) {
+                    table.innerHTML = `
+                        <tr><td colspan="3" class="px-6 py-8 text-center text-text-muted">
+                            Belum ada data
+                        </td></tr>`;
+                    return;
+                }
+
+                table.innerHTML = data.map(item => {
+                    const santri = santriList.find(s => s.id == item.santri_id);
+                    const diagText = (item.diagnoses || []).join(', ') || 'N/A';
+
+                    let statusClass = 'bg-amber-100 text-amber-800';
+                    if (item.status === 'sakit') statusClass = 'bg-red-100 text-red-800';
+                    else if (item.status === 'sembuh') statusClass = 'bg-green-100 text-green-800';
+
+                    const statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${statusClass} capitalize">${item.status}</span>`;
+
+                    return `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="font-medium">${santri ? santri.nama_lengkap : 'N/A'}</div>
+                                <div class="text-xs text-gray-500">${santri ? santri.nis : ''}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="mb-1 truncate max-w-[200px]" title="${diagText}">${diagText}</div>
+                                ${statusBadge}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex justify-center gap-2">
+                                    <button onclick="openDetail('${item.id}')" class="text-blue-600">👁</button>
+                                    <button onclick="editDraft('${item.id}')" class="text-amber-600">✏️</button>
+                                    <button onclick="deleteTemp('${item.id}')" class="text-red-600">🗑</button>
+                                </div>
+                            </td>
+                        </tr>
                     `;
-                 });
+                }).join('');
+            });
+    }
+
+    function editDraft(id) {
+        fetch(`{{ route('sakit.getTemporary') }}?id=${id}`)
+            .then(res => res.json())
+            .then(d => {
+                document.getElementById('edit_id').value = d.id;
+                
+                if (santriSelect) santriSelect.setValue(d.santri_id);
+                if (diagnosisTags) diagnosisTags.setTags(d.diagnoses);
+                
+                document.getElementById('tanggal_mulai_sakit').value = d.tanggal_mulai_sakit;
+                document.getElementById('gejala').value = d.gejala;
+                document.getElementById('tindakan').value = d.tindakan;
+                document.getElementById('resep_obat').value = d.resep_obat;
+                document.getElementById('suhu_tubuh').value = d.suhu_tubuh || '';
+                document.getElementById('status').value = d.status;
+                document.getElementById('tanggal_selesai_sakit').value = d.tanggal_selesai_sakit || '';
+                document.getElementById('catatan').value = d.catatan || '';
+
+                document.getElementById('obatContainer').innerHTML = '';
+                obatCounter = 0;
+                if (d.obat_data && d.obat_data.length > 0) {
+                    d.obat_data.forEach(obat => addObatRow(obat));
+                }
+
+                document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>UPDATE DRAFT</span>';
+                document.getElementById('btnCancel').classList.remove('hidden');
+
+                if (typeof closeDetailModal === 'function') closeDetailModal();
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showAlert("Mode edit aktif!", "info");
+            });
+    }
+
+    function cancelEdit() {
+        resetForm();
+        showAlert("Mode edit dibatalkan", "secondary");
+    }
+
+    function deleteTemp(id) {
+        if (!confirm('Yakin ingin menghapus draft ini?')) return;
+
+        fetch("{{ route('sakit.deleteTemporary') }}", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector("input[name=_token]").value,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ id, _method: "DELETE" })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                renderDrafts();
+                showAlert("Data berhasil dihapus 🗑️", "warning");
+            }
+        })
+        .catch(() => showAlert("Gagal menghapus data!", "danger"));
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        renderDrafts();
+        
+        // Initialize Santri Search
+        const sSelect = document.getElementById('santri_id');
+        if (sSelect) {
+            santriSelect = new SearchableSelect(sSelect, {
+                placeholder: 'Cari santri...',
+                emptyText: '-- Pilih Santri --'
+            });
         }
 
-        function closeDetailModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
+        // Initialize Diagnosis Tags
+        diagnosisTags = new TagInput('diagnosisTagInput', 'tagInput', 'tagSuggestions');
+    });
+</script>
 
-        function editDraft(id) {
-            fetch(`{{ route('sakit.getTemporary') }}?id=${id}`)
-                .then(res => res.json())
-                .then(d => {
-                    document.getElementById('edit_id').value = d.id;
-                    document.getElementById('santri_id').value = d.santri_id;
-                    document.getElementById('tanggal_mulai_sakit').value = d.tanggal_mulai_sakit;
-                    document.getElementById('diagnosis').value = d.diagnosis;
-                    document.getElementById('gejala').value = d.gejala;
-                    document.getElementById('tindakan').value = d.tindakan;
-                    document.getElementById('resep_obat').value = d.resep_obat;
-                    document.getElementById('suhu_tubuh').value = d.suhu_tubuh || '';
-                    document.getElementById('status').value = d.status;
-                    document.getElementById('tanggal_selesai_sakit').value = d.tanggal_selesai_sakit || '';
-                    document.getElementById('catatan').value = d.catatan || '';
-
-                    document.getElementById('obatContainer').innerHTML = '';
-                    obatCounter = 0;
-                    if (d.obat_data && d.obat_data.length > 0) {
-                        d.obat_data.forEach(obat => addObatRow(obat));
-                    }
-
-                     document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>UPDATE DRAFT</span>';
-                    document.getElementById('btnCancel').classList.remove('hidden');
-
-                     closeDetailModal();
-                    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                     showAlert("Mode edit aktif! Ubah data lalu klik UPDATE DRAFT", "info");
-                });
-        }
-
-        function cancelEdit() {
-            form.reset();
-            document.getElementById('edit_id').value = '';
-            document.getElementById('obatContainer').innerHTML = '';
-            obatCounter = 0;
-             document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
-            document.getElementById('btnCancel').classList.add('hidden');
-            showAlert("Mode edit dibatalkan", "secondary");
-        }
-
-        function deleteTemp(id) {
-             if (!confirm('Yakin ingin menghapus draft ini?')) return;
-
-             fetch("{{ route('sakit.deleteTemporary') }}", {
-                    method: "DELETE",
-                    headers: {
-                         "X-CSRF-TOKEN": document.querySelector("input[name=_token]").value,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ id })
-                })
-                 .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        renderDrafts();
-                         closeDetailModal();
-                        showAlert("Data berhasil dihapus dari draft 🗑️", "warning");
-                    }
-                })
-                 .catch(() => showAlert("Gagal menghapus data!", "danger"));
-        }
-
-        document.addEventListener("DOMContentLoaded", renderDrafts);
-    </script>
 </div>
 @endsection

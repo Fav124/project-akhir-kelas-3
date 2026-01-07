@@ -3,19 +3,33 @@
         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
             <tr>
                 <th class="px-6 py-4 font-bold rounded-tl-xl" scope="col">No</th>
+                <th class="px-6 py-4 font-bold" scope="col">Foto</th>
                 <th class="px-6 py-4 font-bold" scope="col">Nama Obat</th>
                 <th class="px-6 py-4 font-bold" scope="col">Stok</th>
+                <th class="px-6 py-4 font-bold" scope="col">Kadaluarsa</th>
                 <th class="px-6 py-4 font-bold" scope="col">Satuan</th>
-                <th class="px-6 py-4 font-bold" scope="col">Stok Min</th>
                 <th class="px-6 py-4 font-bold" scope="col">Harga</th>
                 <th class="px-6 py-4 font-bold rounded-tr-xl text-center" scope="col">Aksi</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
             @forelse($obat as $index => $item)
+            @php
+                $isExpired = $item->tanggal_kadaluarsa && $item->tanggal_kadaluarsa < date('Y-m-d');
+                $isNearExpired = $item->tanggal_kadaluarsa && $item->tanggal_kadaluarsa >= date('Y-m-d') && $item->tanggal_kadaluarsa <= date('Y-m-d', strtotime('+3 months'));
+            @endphp
             <tr class="bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                 <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
                     {{ $obat->firstItem() + $index }}
+                </td>
+                <td class="px-6 py-4">
+                    <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-700">
+                        @if($item->foto)
+                            <img src="{{ asset('storage/' . $item->foto) }}" alt="{{ $item->nama_obat }}" class="w-full h-full object-cover">
+                        @else
+                            <span class="material-symbols-outlined text-gray-400">medication</span>
+                        @endif
+                    </div>
                 </td>
                 <td class="px-6 py-4 font-medium text-text-main dark:text-white">
                     {{ $item->nama_obat }}
@@ -28,8 +42,16 @@
                         {{ $item->stok }}
                     </span>
                 </td>
+                <td class="px-6 py-4">
+                    @if($item->tanggal_kadaluarsa)
+                        <span class="px-2 py-1 rounded-md text-xs font-bold {{ $isExpired ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : ($isNearExpired ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400') }}">
+                            {{ \Carbon\Carbon::parse($item->tanggal_kadaluarsa)->format('d/m/Y') }}
+                        </span>
+                    @else
+                        <span class="text-gray-400">-</span>
+                    @endif
+                </td>
                 <td class="px-6 py-4">{{ $item->satuan }}</td>
-                <td class="px-6 py-4">{{ $item->stok_minimum }}</td>
                 <td class="px-6 py-4">Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
                 <td class="px-6 py-4">
                     <div class="flex items-center justify-center gap-2">
@@ -51,7 +73,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                     Tidak ada data obat ditemukan.
                 </td>
             </tr>

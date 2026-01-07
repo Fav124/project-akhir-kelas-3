@@ -8,7 +8,8 @@ use App\Http\Controllers\{
     ObatController,
     LaporanController,
     UserController,
-    JurusanController
+    JurusanController,
+    DiagnosisController
 };
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
@@ -96,6 +97,21 @@ Route::prefix('kelas')->name('kelas.')->group(function () {
     Route::get('/{kela}/edit', [KelasController::class, 'edit'])->name('edit');
     Route::put('/{kela}', [KelasController::class, 'update'])->name('update');
     Route::delete('/{kela}', [KelasController::class, 'destroy'])->name('destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| DIAGNOSIS (Admin for CRUD, All for Search)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('diagnosis')->name('diagnosis.')->group(function () {
+    Route::get('/search', [DiagnosisController::class, 'search'])->name('search');
+    Route::middleware(['auth', 'role:admin'])->group(function () {
+        Route::get('/', [DiagnosisController::class, 'index'])->name('index');
+        Route::post('/', [DiagnosisController::class, 'store'])->name('store');
+        Route::put('/{diagnosis}', [DiagnosisController::class, 'update'])->name('update');
+        Route::delete('/{diagnosis}', [DiagnosisController::class, 'destroy'])->name('destroy');
+    });
 });
 
 /*

@@ -38,6 +38,7 @@ return array(
     'App\\Http\\Middleware\\VerifyCsrfToken' => $baseDir . '/app/Http/Middleware/VerifyCsrfToken.php',
     'App\\Http\\Requests\\StoreKelasRequest' => $baseDir . '/app/Http/Requests/StoreKelasRequest.php',
     'App\\Http\\Requests\\UpdateKelasRequest' => $baseDir . '/app/Http/Requests/UpdateKelasRequest.php',
+    'App\\Models\\Diagnosis' => $baseDir . '/app/Models/Diagnosis.php',
     'App\\Models\\InfoKesehatanSantri' => $baseDir . '/app/Models/InfoKesehatanSantri.php',
     'App\\Models\\Jurusan' => $baseDir . '/app/Models/Jurusan.php',
     'App\\Models\\Kelas' => $baseDir . '/app/Models/Kelas.php',

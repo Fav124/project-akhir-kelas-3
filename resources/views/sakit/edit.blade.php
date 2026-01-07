@@ -72,9 +72,20 @@
                     </div>
 
                     <div class="md:col-span-2">
-                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Diagnosis</label>
-                         <input type="text" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" 
-                                name="diagnosis" value="{{ old('diagnosis', $sakit->diagnosis) }}" required>
+                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Diagnosis (Tags)</label>
+                         <div id="diagnosisTagInput" class="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus-within:ring-2 focus-within:ring-primary min-h-[42px] flex flex-wrap gap-2 items-center">
+                            <!-- Tags will be rendered here -->
+                            <input type="text" id="tagInput" class="flex-1 bg-transparent border-none outline-none text-sm min-w-[120px]" placeholder="Ketik & tekan Enter untuk tambah tag...">
+                        </div>
+                        <div id="tagSuggestions" class="absolute z-50 mt-1 w-full max-w-md bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl hidden overflow-hidden">
+                             <!-- Suggestions will be rendered here -->
+                        </div>
+                        <div id="tagsHiddenContainer">
+                            @foreach($sakit->diagnoses as $diag)
+                                <input type="hidden" name="diagnoses[]" value="{{ $diag->nama }}">
+                            @endforeach
+                        </div>
+                        <p class="text-xs text-text-muted mt-1 italic">Ketik diagnosis lalu tekan Enter. Anda bisa menambah lebih dari satu tag.</p>
                     </div>
 
                     <div class="md:col-span-2">
@@ -128,4 +139,133 @@
         </form>
     </div>
 </div>
+    <script>
+    class TagInput {
+        constructor(containerId, inputId, suggestionsId, hiddenContainerId) {
+            this.container = document.getElementById(containerId);
+            this.input = document.getElementById(inputId);
+            this.suggestions = document.getElementById(suggestionsId);
+            this.hiddenContainer = document.getElementById(hiddenContainerId);
+            this.tags = [];
+            this.init();
+        }
+
+        init() {
+            this.input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = this.input.value.trim();
+                    if (val) this.addTag(val);
+                } else if (e.key === 'Backspace' && !this.input.value && this.tags.length > 0) {
+                    this.removeTag(this.tags.length - 1);
+                }
+            });
+
+            this.input.addEventListener('input', () => {
+                const val = this.input.value.trim();
+                if (val.length >= 2) {
+                    this.fetchSuggestions(val);
+                } else {
+                    this.hideSuggestions();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!this.container.contains(e.target) && !this.suggestions.contains(e.target)) {
+                    this.hideSuggestions();
+                }
+            });
+        }
+
+        async fetchSuggestions(q) {
+            try {
+                const res = await fetch(`{{ route('diagnosis.search') }}?q=${q}`);
+                const data = await res.json();
+                this.renderSuggestions(data);
+            } catch (e) {
+                console.error("Failed to fetch suggestions", e);
+            }
+        }
+
+        renderSuggestions(items) {
+            if (!items.length) {
+                this.hideSuggestions();
+                return;
+            }
+
+            this.suggestions.innerHTML = items.map(item => `
+                <div class="px-3 py-2 hover:bg-primary/10 cursor-pointer text-sm font-medium border-b border-gray-100 last:border-0" data-nama="${item.nama}">
+                    ${item.nama}
+                </div>
+            `).join('');
+
+            this.suggestions.querySelectorAll('div').forEach(div => {
+                div.addEventListener('click', () => {
+                    this.addTag(div.dataset.nama);
+                    this.hideSuggestions();
+                });
+            });
+
+            this.suggestions.classList.remove('hidden');
+        }
+
+        hideSuggestions() {
+            this.suggestions.classList.add('hidden');
+        }
+
+        addTag(val) {
+            if (this.tags.includes(val)) {
+                this.input.value = '';
+                return;
+            }
+            this.tags.push(val);
+            this.render();
+            this.input.value = '';
+        }
+
+        removeTag(index) {
+            this.tags.splice(index, 1);
+            this.render();
+        }
+
+        render() {
+            // Render UI Chips
+            const input = this.input;
+            this.container.innerHTML = '';
+            this.tags.forEach((tag, index) => {
+                const badge = document.createElement('span');
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-bold border border-primary/20';
+                badge.innerHTML = `
+                    ${tag}
+                    <button type="button" class="hover:text-red-500 flex items-center" onclick="diagnosisTags.removeTag(${index})">
+                        <span class="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                `;
+                this.container.appendChild(badge);
+            });
+            this.container.appendChild(input);
+
+            // Update Hidden Inputs
+            this.hiddenContainer.innerHTML = '';
+            this.tags.forEach(tag => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'diagnoses[]';
+                hiddenInput.value = tag;
+                this.hiddenContainer.appendChild(hiddenInput);
+            });
+        }
+
+        setTags(tags) {
+            this.tags = tags || [];
+            this.render();
+        }
+    }
+
+    const diagnosisTags = new TagInput('diagnosisTagInput', 'tagInput', 'tagSuggestions', 'tagsHiddenContainer');
+    
+    // Set initial tags from existing data
+    const initialTags = @json($sakit->diagnoses->pluck('nama'));
+    diagnosisTags.setTags(initialTags);
+    </script>
 @endsection

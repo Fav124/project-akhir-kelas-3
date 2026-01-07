@@ -61,9 +61,9 @@
                 <td class="px-6 py-4">
                     <div class="flex items-center justify-center gap-2">
                         @if($item->status == 'sakit')
-                        <form action="{{ route('sakit.markRecovered', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tandai santri ini sudah sembuh?')">
+                        <form action="{{ route('sakit.sembuh', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tandai santri ini sudah sembuh?')">
                             @csrf
-                            @method('PATCH')
+                            @method('PUT')
                             <button type="submit" class="p-2 text-green-600 hover:bg-green-50 rounded-lg dark:text-green-400 dark:hover:bg-green-900/20 transition-colors" title="Tandai Sembuh">
                                 <span class="material-symbols-outlined text-[20px]">check_circle</span>
                             </button>

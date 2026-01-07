@@ -23,13 +23,20 @@ class SantriController extends Controller
         if ($request->ajax()) {
             $query = Santri::with(['kelas', 'jurusan']);
 
+            // Filter Kelas
+            if ($request->has('filter_kelas') && !empty($request->filter_kelas)) {
+                $query->where('kelas_id', $request->filter_kelas);
+            }
+
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
-                $query->where('nama_lengkap', 'LIKE', "%{$search}%")
+                $query->where(function($q) use ($search) {
+                    $q->where('nama_lengkap', 'LIKE', "%{$search}%")
                       ->orWhere('nis', 'LIKE', "%{$search}%")
                       ->orWhereHas('kelas', function($q) use ($search) {
                           $q->where('nama_kelas', 'LIKE', "%{$search}%");
                       });
+                });
             }
 
             $santri = $query->paginate(10);
@@ -37,7 +44,8 @@ class SantriController extends Controller
         }
 
         $santri = Santri::with('kelas')->paginate(10);
-        return view('santri.index', compact('santri'));
+        $kelas = Kelas::all();
+        return view('santri.index', compact('santri', 'kelas'));
     }
 
     // ========================

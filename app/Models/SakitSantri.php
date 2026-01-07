@@ -68,6 +68,15 @@ class SakitSantri extends Model
     }
 
     /**
+     * Relasi many-to-many dengan diagnosis (tags)
+     */
+    public function diagnoses()
+    {
+        return $this->belongsToMany(Diagnosis::class, 'diagnosis_sakit_santri', 'sakit_santri_id', 'diagnosis_id')
+            ->withTimestamps();
+    }
+
+    /**
      * Relasi many-to-many dengan obat
      */
     public function obats()

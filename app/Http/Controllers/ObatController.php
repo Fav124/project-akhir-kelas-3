@@ -20,11 +20,36 @@ class ObatController extends Controller
         if ($request->ajax()) {
             $query = Obat::orderBy('nama_obat', 'asc');
 
+            // Search
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
-                $query->where('nama_obat', 'LIKE', "%{$search}%")
+                $query->where(function($q) use ($search) {
+                    $q->where('nama_obat', 'LIKE', "%{$search}%")
                       ->orWhere('deskripsi', 'LIKE', "%{$search}%")
                       ->orWhere('satuan', 'LIKE', "%{$search}%");
+                });
+            }
+
+            // Filter Status
+            if ($request->has('filter_status') && !empty($request->filter_status)) {
+                $filter = $request->filter_status;
+                $today = date('Y-m-d');
+                $next3Months = date('Y-m-d', strtotime('+3 months'));
+
+                switch ($filter) {
+                    case 'kadaluarsa':
+                        $query->where('tanggal_kadaluarsa', '<', $today);
+                        break;
+                    case 'hampir_kadaluarsa':
+                        $query->whereBetween('tanggal_kadaluarsa', [$today, $next3Months]);
+                        break;
+                    case 'stok_sedikit':
+                        $query->whereColumn('stok', '<=', 'stok_minimum');
+                        break;
+                    case 'aman':
+                        $query->whereColumn('stok', '>', 'stok_minimum');
+                        break;
+                }
             }
 
             $obat = $query->paginate(10);
@@ -54,13 +79,22 @@ class ObatController extends Controller
             'stok' => 'required|numeric|min:0',
             'satuan' => 'required|string|max:50',
             'stok_minimum' => 'nullable|numeric|min:0',
-            'harga_satuan' => 'nullable|numeric|min:0'
+            'harga_satuan' => 'nullable|numeric|min:0',
+            'tanggal_kadaluarsa' => 'nullable|date',
+            'foto' => 'nullable|image|max:5120'
         ]);
 
         $sessionKey = 'obat_draft_' . session()->getId();
         $drafts = session()->get($sessionKey, []);
 
-        $newData = $request->all();
+        // Handle photo upload
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = \App\Helpers\PhotoHelper::store($request->file('foto'), 'obats');
+        }
+
+        $newData = $request->except(['foto']);
+        $newData['foto'] = $fotoPath;
         $newData['id'] = uniqid('obat_');
         $newData['created_at'] = now()->toDateTimeString();
 
@@ -107,7 +141,9 @@ class ObatController extends Controller
             'stok' => 'required|numeric|min:0',
             'satuan' => 'required|string|max:50',
             'stok_minimum' => 'nullable|numeric|min:0',
-            'harga_satuan' => 'nullable|numeric|min:0'
+            'harga_satuan' => 'nullable|numeric|min:0',
+            'tanggal_kadaluarsa' => 'nullable|date',
+            'foto' => 'nullable|image|max:5120'
         ]);
 
         $sessionKey = 'obat_draft_' . session()->getId();
@@ -117,7 +153,15 @@ class ObatController extends Controller
 
         $drafts = collect($drafts)->map(function ($item) use ($editId, $request) {
             if ($item['id'] === $editId) {
-                return array_merge($item, $request->except(['_token', 'edit_id']), [
+                $fotoPath = $item['foto'];
+                if ($request->hasFile('foto')) {
+                    // Delete old photo from storage if exists in draft
+                    \App\Helpers\PhotoHelper::delete($item['foto']);
+                    $fotoPath = \App\Helpers\PhotoHelper::store($request->file('foto'), 'obats');
+                }
+
+                return array_merge($item, $request->except(['_token', 'edit_id', 'foto']), [
+                    'foto' => $fotoPath,
                     'updated_at' => now()->toDateTimeString()
                 ]);
             }
@@ -173,7 +217,9 @@ class ObatController extends Controller
                     'stok' => 'required|numeric|min:0',
                     'satuan' => 'required|string|max:50',
                     'stok_minimum' => 'nullable|numeric|min:0',
-                    'harga_satuan' => 'nullable|numeric|min:0'
+                    'harga_satuan' => 'nullable|numeric|min:0',
+                    'tanggal_kadaluarsa' => 'nullable|date',
+                    'foto' => 'nullable|string'
                 ])->validate();
 
                 Obat::create($validated);
@@ -200,10 +246,17 @@ class ObatController extends Controller
             'stok' => 'required|numeric|min:0',
             'satuan' => 'required|string|max:50',
             'stok_minimum' => 'nullable|numeric|min:0',
-            'harga_satuan' => 'nullable|numeric|min:0'
+            'harga_satuan' => 'nullable|numeric|min:0',
+            'tanggal_kadaluarsa' => 'nullable|date',
+            'foto' => 'nullable|image|max:5120'
         ]);
 
-        Obat::create($request->all());
+        $data = $request->all();
+        if ($request->hasFile('foto')) {
+            $data['foto'] = \App\Helpers\PhotoHelper::store($request->file('foto'), 'obats');
+        }
+
+        Obat::create($data);
 
         return redirect()->route('obat.index')->with('success', 'Obat berhasil ditambahkan');
     }
@@ -247,10 +300,18 @@ class ObatController extends Controller
             'stok' => 'required|numeric|min:0',
             'satuan' => 'required|string|max:50',
             'stok_minimum' => 'nullable|numeric|min:0',
-            'harga_satuan' => 'nullable|numeric|min:0'
+            'harga_satuan' => 'nullable|numeric|min:0',
+            'tanggal_kadaluarsa' => 'nullable|date',
+            'foto' => 'nullable|image|max:5120'
         ]);
 
-        $obat->update($request->all());
+        $data = $request->except(['foto']);
+        if ($request->hasFile('foto')) {
+            \App\Helpers\PhotoHelper::delete($obat->foto);
+            $data['foto'] = \App\Helpers\PhotoHelper::store($request->file('foto'), 'obats');
+        }
+
+        $obat->update($data);
 
         return redirect()->route('obat.index')->with('success', 'Obat berhasil diperbarui');
     }

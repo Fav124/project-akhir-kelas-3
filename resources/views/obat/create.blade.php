@@ -36,11 +36,25 @@
                 Form Input Data
             </h2>
 
-            <form id="formObat">
+            <form id="formObat" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="edit_id" id="edit_id">
 
                 <div class="space-y-4">
+                    <!-- Foto Obat -->
+                    <div>
+                        <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Foto Obat</label>
+                        <div class="flex items-center gap-4">
+                            <div class="w-20 h-20 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-700">
+                                <span class="material-symbols-outlined text-gray-400 text-3xl" id="previewPlaceholder">medication</span>
+                                <img src="" alt="Preview" class="w-full h-full object-cover hidden" id="previewFoto">
+                            </div>
+                            <div class="flex-1">
+                                <input type="file" name="foto" id="fotoInput" accept="image/*" class="block w-full text-xs text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-green-600 transition-all">
+                            </div>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Nama Obat</label>
                         <div class="relative">
@@ -53,7 +67,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Deskripsi</label>
-                        <textarea class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" rows="3" placeholder="Deskripsi obat, kegunaan, efek samping..." name="deskripsi" id="deskripsi"></textarea>
+                        <textarea class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" rows="2" placeholder="Deskripsi obat..." name="description" id="deskripsi"></textarea>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -65,14 +79,9 @@
                             <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Satuan</label>
                             <select class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="satuan" id="satuan" required>
                                 <option value="" disabled selected>-- Pilih --</option>
-                                <option value="Tablet">Tablet</option>
-                                <option value="Kapsul">Kapsul</option>
-                                <option value="Botol">Botol</option>
-                                <option value="Strip">Strip</option>
-                                <option value="Box">Box</option>
-                                <option value="Pcs">Pcs</option>
-                                <option value="Ampul">Ampul</option>
-                                <option value="Tube">Tube</option>
+                                @foreach(['Tablet', 'Kapsul', 'Botol', 'Strip', 'Box', 'Pcs', 'Ampul', 'Tube'] as $s)
+                                    <option value="{{ $s }}">{{ $s }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -81,12 +90,16 @@
                         <div>
                             <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Stok Minimum</label>
                             <input type="number" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" placeholder="10" min="0" name="stok_minimum" id="stok_minimum">
-                            <p class="text-xs text-text-muted mt-1">Alert jika stok dibawah nilai ini</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Harga Satuan (Rp)</label>
-                            <input type="number" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" placeholder="5000" min="0" step="100" name="harga_satuan" id="harga_satuan">
+                            <input type="number" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" placeholder="5000" min="0" name="harga_satuan" id="harga_satuan">
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-text-main dark:text-gray-300 mb-2">Tanggal Kadaluarsa</label>
+                        <input type="date" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" name="tanggal_kadaluarsa" id="tanggal_kadaluarsa">
                     </div>
                 </div>
 
@@ -119,8 +132,8 @@
                 <table class="w-full">
                     <thead class="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 sticky top-0">
                         <tr>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Nama Obat</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Stok</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Obat</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-text-main dark:text-gray-300">Status</th>
                             <th class="px-6 py-3 text-center text-sm font-semibold text-text-main dark:text-gray-300">Aksi</th>
                         </tr>
                     </thead>
@@ -149,7 +162,7 @@
 
     <!-- DETAIL MODAL -->
     <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-xl max-w-2xl w-full max-h-96 overflow-y-auto">
+        <div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-surface-light dark:bg-surface-dark">
                 <h3 class="text-lg font-bold text-text-main dark:text-white flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary">info</span>
@@ -160,12 +173,7 @@
                 </button>
             </div>
             <div class="p-6" id="modalContent">
-                <div class="flex justify-center py-8">
-                    <div class="inline-flex items-center gap-2 text-primary">
-                        <span class="material-symbols-outlined animate-spin">refresh</span>
-                        <span>Loading...</span>
-                    </div>
-                </div>
+                <!-- Content injected via JS -->
             </div>
         </div>
     </div>
@@ -176,39 +184,44 @@
     <script>
         const form = document.getElementById('formObat');
 
+        // Preview Foto
+        document.getElementById('fotoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('previewFoto');
+                    const placeholder = document.getElementById('previewPlaceholder');
+                    preview.src = event.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
         function showAlert(message, type = "success") {
             const box = document.getElementById("alertBox");
             const id = "alert-" + Date.now();
             const bgClass = {
                 'success': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700',
                 'danger': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700',
-                'question': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700', // Info
+                'question': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700',
                 'warning': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700',
                 'secondary': 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
             }[type] || 'bg-blue-100';
 
             const icon = {
-                'success': 'check_circle',
-                'danger': 'error',
-                'question': 'info',
-                'warning': 'warning',
-                'secondary': 'check'
+                'success': 'check_circle', 'danger': 'error', 'question': 'info', 'warning': 'warning', 'secondary': 'check'
             }[type] || 'info';
 
-            const alert = `
-                <div id="${id}" class="p-4 border rounded-lg shadow-sm ${bgClass} flex items-start gap-3 animate-in slide-in-from-top">
-                    <span class="material-symbols-outlined flex-shrink-0 mt-0.5">${icon}</span>
-                    <p class="flex-1 text-sm font-medium">${message}</p>
-                    <button type="button" onclick="document.getElementById('${id}').remove()" class="flex-shrink-0 opacity-70 hover:opacity-100">
-                        <span class="material-symbols-outlined text-lg">close</span>
-                    </button>
-                </div>
-            `;
+            const alert = `<div id="${id}" class="p-4 border rounded-lg shadow-sm ${bgClass} flex items-start gap-3 animate-in slide-in-from-top">
+                <span class="material-symbols-outlined flex-shrink-0 mt-0.5">${icon}</span>
+                <p class="flex-1 text-sm font-medium">${message}</p>
+                <button type="button" onclick="document.getElementById('${id}').remove()" class="flex-shrink-0 opacity-70 hover:opacity-100"><span class="material-symbols-outlined text-lg">close</span></button>
+            </div>`;
             box.insertAdjacentHTML("beforeend", alert);
-            setTimeout(() => {
-                const el = document.getElementById(id);
-                if (el) el.remove();
-            }, 3500);
+            setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 3500);
         }
 
         function formatRupiah(angka) {
@@ -225,31 +238,32 @@
             const fd = new FormData(form);
             const editId = document.getElementById('edit_id').value;
             const url = editId ? "{{ route('obat.updateTemporary') }}" : "{{ route('obat.storeTemporary') }}";
-            const method = editId ? "PUT" : "POST";
-            const data = {};
-            fd.forEach((value, key) => data[key] = value);
-            if (editId) data.edit_id = editId;
+
+            // If updating, we need to spoof PUT if sending as FormData or just use POST and handle in controller
+            // Laravel's PUT doesn't support FormData file uploads easily without spoofing or using POST
+            if (editId) {
+                fd.append('_method', 'PUT');
+            }
 
             fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        form.reset();
-                        document.getElementById('edit_id').value = '';
-                        document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
-                        document.getElementById('btnCancel').classList.add('hidden');
-                        renderDrafts();
-                        showAlert(result.message || "Data berhasil disimpan! 🎉", "success");
-                    }
-                })
-                .catch(() => showAlert("Gagal menyimpan data!", "danger"));
+                method: "POST", // Always use POST with _method spoofing for file uploads
+                headers: { 'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value },
+                body: fd
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    form.reset();
+                    document.getElementById('edit_id').value = '';
+                    document.getElementById('previewFoto').classList.add('hidden');
+                    document.getElementById('previewPlaceholder').classList.remove('hidden');
+                    document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
+                    document.getElementById('btnCancel').classList.add('hidden');
+                    renderDrafts();
+                    showAlert(result.message || "Data berhasil disimpan! 🎉", "success");
+                }
+            })
+            .catch(() => showAlert("Gagal menyimpan data!", "danger"));
         }
 
         function renderDrafts() {
@@ -264,120 +278,94 @@
                     btnSaveAll.disabled = data.length === 0;
 
                     if (!data.length) {
-                        table.innerHTML = `
-                            <tr><td colspan="3" class="px-6 py-8 text-center text-text-muted dark:text-gray-400">
-                                <span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 block mb-2">inbox</span>
-                                Belum ada data
-                            </td></tr>`;
+                        table.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-text-muted dark:text-gray-400"><span class="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 block mb-2">inbox</span>Belum ada data</td></tr>`;
                         return;
                     }
 
                     table.innerHTML = data.map(item => {
                         const lowStock = (item.stok_minimum && item.stok <= item.stok_minimum);
-                        const stockBadge = lowStock ?
-                            '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 ml-2">Stok Rendah</span>' : '';
-
+                        const isExpired = item.tanggal_kadaluarsa && new Date(item.tanggal_kadaluarsa) < new Date();
+                        
                         return `
                             <tr class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50">
                                 <td class="px-6 py-4">
-                                    <div class="font-medium text-text-main dark:text-white">${item.nama_obat}</div>
-                                    <div class="text-xs text-text-muted">${item.satuan}</div>
-                                </td>
-                                <td class="px-6 py-4 text-text-main dark:text-gray-300">
-                                    ${item.stok} ${stockBadge}
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <button class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors" onclick='openDetail(${JSON.stringify(item.id)})'>
-                                            <span class="material-symbols-outlined text-lg">visibility</span>
-                                        </button>
-                                        <button class="p-2 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors" onclick='editDraft(${JSON.stringify(item.id)})'>
-                                            <span class="material-symbols-outlined text-lg">edit</span>
-                                        </button>
-                                        <button class="p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors" onclick='deleteTemp(${JSON.stringify(item.id)})'>
-                                            <span class="material-symbols-outlined text-lg">delete</span>
-                                        </button>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                                            ${item.foto ? `<img src="/storage/${item.foto}" class="w-full h-full object-cover">` : `<span class="material-symbols-outlined text-gray-400 text-sm">medication</span>`}
+                                        </div>
+                                        <div>
+                                            <div class="font-medium text-text-main dark:text-white">${item.nama_obat}</div>
+                                            <div class="text-[10px] text-text-muted uppercase">${item.satuan}</div>
+                                        </div>
                                     </div>
                                 </td>
-                            </tr>
-                        `;
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1">
+                                        ${lowStock ? '<span class="px-1.5 py-0.5 rounded-full text-[10px] bg-red-100 text-red-700 w-fit font-bold">STOK MENIPIS</span>' : '<span class="px-1.5 py-0.5 rounded-full text-[10px] bg-green-100 text-green-700 w-fit font-bold">AMAN</span>'}
+                                        ${isExpired ? '<span class="px-1.5 py-0.5 rounded-full text-[10px] bg-red-100 text-red-700 w-fit font-bold">KADALUARSA</span>' : ''}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <button class="p-1.5 text-blue-600 hover:bg-blue-50 rounded" onclick='openDetail("${item.id}")'><span class="material-symbols-outlined text-lg">visibility</span></button>
+                                        <button class="p-1.5 text-amber-600 hover:bg-amber-50 rounded" onclick='editDraft("${item.id}")'><span class="material-symbols-outlined text-lg">edit</span></button>
+                                        <button class="p-1.5 text-red-600 hover:bg-red-50 rounded" onclick='deleteTemp("${item.id}")'><span class="material-symbols-outlined text-lg">delete</span></button>
+                                    </div>
+                                </td>
+                            </tr>`;
                     }).join('');
                 });
         }
 
         function openDetail(id) {
             document.getElementById('detailModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-
             fetch(`{{ route('obat.getTemporary') }}?id=${id}`)
                 .then(res => res.json())
                 .then(d => {
                     const lowStock = (d.stok_minimum && d.stok <= d.stok_minimum);
-                    const stockStatus = lowStock ?
-                        '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Stok Menipis</span>' :
-                        '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Stok Aman</span>';
+                    const isExpired = d.tanggal_kadaluarsa && new Date(d.tanggal_kadaluarsa) < new Date();
 
                     document.getElementById("modalContent").innerHTML = `
-                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-4">
-                                <h4 class="text-sm font-bold text-primary border-b border-gray-200 dark:border-gray-700 pb-2">Informasi Obat</h4>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Nama Obat</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.nama_obat}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Satuan</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.satuan}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Stok</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.stok} ${d.satuan}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Status</p>
-                                    <div class="mt-1">${stockStatus}</div>
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="w-full md:w-1/3">
+                                <div class="aspect-square rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-700 shadow-inner">
+                                    ${d.foto ? `<img src="/storage/${d.foto}" class="w-full h-full object-cover">` : `<span class="material-symbols-outlined text-gray-400 text-6xl">medication</span>`}
                                 </div>
                             </div>
-                             <div class="space-y-4">
-                                <h4 class="text-sm font-bold text-primary border-b border-gray-200 dark:border-gray-700 pb-2">Detail Lainnya</h4>
+                            <div class="flex-1 space-y-4">
                                 <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Stok Minimum</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.stok_minimum || '-'}</p>
+                                    <h4 class="text-2xl font-bold text-text-main dark:text-white">${d.nama_obat}</h4>
+                                    <p class="text-text-muted">${d.satuan}</p>
                                 </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Harga Satuan</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.harga_satuan ? formatRupiah(d.harga_satuan) : '-'}</p>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">Stok</p>
+                                        <p class="text-lg font-bold ${lowStock ? 'text-red-500' : 'text-primary'}">${d.stok}</p>
+                                    </div>
+                                    <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                        <p class="text-[10px] font-bold text-text-muted uppercase">Kadaluarsa</p>
+                                        <p class="text-sm font-bold ${isExpired ? 'text-red-500' : 'text-text-main dark:text-white'}">${d.tanggal_kadaluarsa || '-'}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-xs font-semibold text-text-muted uppercase tracking-wide">Total Nilai</p>
-                                    <p class="text-sm font-medium text-text-main dark:text-white mt-1">${d.harga_satuan ? formatRupiah(d.stok * d.harga_satuan) : '-'}</p>
+                                <div class="space-y-2">
+                                    <p class="text-[10px] font-bold text-text-muted uppercase">Harga Satuan</p>
+                                    <p class="text-lg font-bold dark:text-white">${formatRupiah(d.harga_satuan)}</p>
                                 </div>
                             </div>
                         </div>
-                        ${d.deskripsi ? `
-                            <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <h4 class="text-xs font-bold text-primary mb-2">DESKRIPSI</h4>
-                                <p class="text-sm text-text-muted dark:text-gray-300">${d.deskripsi}</p>
-                            </div>` : ''}
-
-                        <div class="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                            <button class="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors" onclick='editDraft("${d.id}")'>
-                                <span class="material-symbols-outlined text-lg">edit</span>
-                                <span>Edit</span>
-                            </button>
-                            <button class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors" onclick='deleteTemp("${d.id}")'>
-                                <span class="material-symbols-outlined text-lg">delete</span>
-                                <span>Hapus</span>
-                            </button>
+                        <div class="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-800">
+                            <p class="text-[10px] font-bold text-text-muted uppercase mb-2">Deskripsi</p>
+                            <p class="text-sm text-text-main dark:text-gray-300 italic">${d.deskripsi || 'Tidak ada deskripsi.'}</p>
+                        </div>
+                        <div class="flex gap-3 mt-6">
+                            <button class="flex-1 px-4 py-2 bg-amber-600 text-white font-bold rounded-lg" onclick='editDraft("${d.id}")'>Edit</button>
+                            <button class="flex-1 px-4 py-2 bg-red-600 text-white font-bold rounded-lg" onclick='deleteTemp("${d.id}")'>Hapus</button>
                         </div>
                     `;
                 });
         }
 
-        function closeDetailModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
+        function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
 
         function editDraft(id) {
             fetch(`{{ route('obat.getTemporary') }}?id=${id}`)
@@ -390,436 +378,41 @@
                     document.getElementById('satuan').value = d.satuan;
                     document.getElementById('stok_minimum').value = d.stok_minimum || '';
                     document.getElementById('harga_satuan').value = d.harga_satuan || '';
+                    document.getElementById('tanggal_kadaluarsa').value = d.tanggal_kadaluarsa || '';
+
+                    if (d.foto) {
+                        const preview = document.getElementById('previewFoto');
+                        preview.src = "/storage/" + d.foto;
+                        preview.classList.remove('hidden');
+                        document.getElementById('previewPlaceholder').classList.add('hidden');
+                    }
 
                     document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">check_circle</span><span>UPDATE DRAFT</span>';
                     document.getElementById('btnCancel').classList.remove('hidden');
-
                     closeDetailModal();
-                    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    showAlert("Mode edit aktif! Ubah data lalu klik UPDATE DRAFT", "info");
+                    form.scrollIntoView({ behavior: 'smooth' });
                 });
         }
 
         function cancelEdit() {
             form.reset();
             document.getElementById('edit_id').value = '';
+            document.getElementById('previewFoto').classList.add('hidden');
+            document.getElementById('previewPlaceholder').classList.remove('hidden');
             document.getElementById('btnSubmit').innerHTML = '<span class="material-symbols-outlined text-lg">add_circle</span><span>TAMBAH KE DRAFT</span>';
             document.getElementById('btnCancel').classList.add('hidden');
-            showAlert("Mode edit dibatalkan", "secondary");
         }
 
         function deleteTemp(id) {
-            if (!confirm('Yakin ingin menghapus draft ini?')) return;
-
+            if (!confirm('Hapus draft?')) return;
             fetch("{{ route('obat.deleteTemporary') }}", {
-                    method: "DELETE",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector("input[name=_token]").value,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ id })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        renderDrafts();
-                        closeDetailModal();
-                        showAlert("Data berhasil dihapus dari draft 🗑️", "warning");
-                    }
-                })
-                .catch(() => showAlert("Gagal menghapus data!", "danger"));
+                method: "DELETE",
+                headers: { "X-CSRF-TOKEN": document.querySelector("input[name=_token]").value, "Content-Type": "application/json" },
+                body: JSON.stringify({ id })
+            }).then(res => res.json()).then(() => { renderDrafts(); closeDetailModal(); showAlert("Dihapus!", "warning"); });
         }
 
         document.addEventListener("DOMContentLoaded", renderDrafts);
     </script>
 </div>
-@endsection
-
-    <div class="row g-4">
-        <!-- LEFT SECTION - FORM INPUT -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-4">
-                        <i class="bi bi-capsule-pill me-2 text-primary"></i> Form Input Data
-                    </h5>
-
-                    <form id="formObat">
-                        @csrf
-                        <input type="hidden" name="edit_id" id="edit_id">
-
-                        <div class="mb-3">
-                            <label class="form-label">Nama Obat</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-capsule-pill"></i></span>
-                                <input type="text" class="form-control" id="nama_obat" name="nama_obat"
-                                    placeholder="Contoh: Paracetamol" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Deskripsi</label>
-                            <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3"
-                                placeholder="Deskripsi obat, kegunaan, efek samping..."></textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Stok</label>
-                                    <input type="number" class="form-control" id="stok" name="stok"
-                                        placeholder="100" min="0" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Satuan</label>
-                                    <select class="form-select" id="satuan" name="satuan" required>
-                                        <option value="" disabled selected>-- Pilih Satuan --</option>
-                                        <option value="Tablet">Tablet</option>
-                                        <option value="Kapsul">Kapsul</option>
-                                        <option value="Botol">Botol</option>
-                                        <option value="Strip">Strip</option>
-                                        <option value="Box">Box</option>
-                                        <option value="Pcs">Pcs</option>
-                                        <option value="Ampul">Ampul</option>
-                                        <option value="Tube">Tube</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Stok Minimum</label>
-                                    <input type="number" class="form-control" id="stok_minimum" name="stok_minimum"
-                                        placeholder="10" min="0">
-                                    <small class="text-muted">Alert jika stok dibawah nilai ini</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Harga Satuan (Rp)</label>
-                                    <input type="number" class="form-control" id="harga_satuan" name="harga_satuan"
-                                        placeholder="5000" min="0" step="100">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex gap-2">
-                            <button type="button" onclick="addToTemporary()" class="btn btn-primary flex-fill"
-                                id="btnSubmit">
-                                <i class="bi bi-plus-circle me-1"></i> TAMBAH KE DRAFT
-                            </button>
-                            <button type="button" onclick="cancelEdit()" class="btn btn-secondary" id="btnCancel"
-                                style="display:none;">
-                                <i class="bi bi-x-circle me-1"></i> Batal
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- RIGHT SECTION - DRAFT TABLE -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-list-check me-2 text-primary"></i> Draft Autosave</h5>
-                    <span class="badge bg-primary" id="draftCount">0</span>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nama Obat</th>
-                                <th>Stok</th>
-                                <th style="width:180px" class="text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="draftTable">
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox"></i> Belum ada data tersimpan
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="p-3 border-top text-end">
-                    <form action="{{ route('obat.saveAll') }}" method="POST">
-                        @csrf
-                        <button class="btn btn-success" id="btnSaveAll" disabled>
-                            <i class="bi bi-check2-all me-1"></i> SIMPAN SEMUA KE DATABASE
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DETAIL -->
-    <div class="modal fade" id="detailModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-capsule me-2"></i>Detail Draft Obat</h5>
-                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="modalContent">
-                    <div class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ALERT -->
-    <div id="alertBox" style="position: fixed; top: 20px; right: 20px; z-index: 2000; width: 300px;"></div>
-
-    <script>
-        const form = document.getElementById('formObat');
-
-        // ⬇️ Alert Function
-        function showAlert(message, type = "success") {
-            const box = document.getElementById("alertBox");
-            const id = "alert-" + Date.now();
-            const alert = `
-                <div class="alert alert-${type} alert-dismissible fade show shadow-sm" id="${id}">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            box.insertAdjacentHTML("beforeend", alert);
-            setTimeout(() => {
-                const el = document.getElementById(id);
-                if (el) el.remove();
-            }, 3500);
-        }
-
-        // ⬇️ Format Rupiah
-        function formatRupiah(angka) {
-            if (!angka) return 'Rp 0';
-            return 'Rp ' + parseInt(angka).toLocaleString('id-ID');
-        }
-
-        // ⬇️ Add to Draft
-        function addToTemporary() {
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            const fd = new FormData(form);
-            const editId = document.getElementById('edit_id').value;
-
-            const url = editId ?
-                "{{ route('obat.updateTemporary') }}" :
-                "{{ route('obat.storeTemporary') }}";
-
-            const method = editId ? "PUT" : "POST";
-
-            const data = {};
-            fd.forEach((value, key) => data[key] = value);
-            if (editId) data.edit_id = editId;
-
-            fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) {
-                        form.reset();
-                        document.getElementById('edit_id').value = '';
-                        document.getElementById('btnSubmit').innerHTML =
-                            '<i class="bi bi-plus-circle me-1"></i> TAMBAH KE DRAFT';
-                        document.getElementById('btnCancel').style.display = 'none';
-                        renderDrafts();
-                        showAlert(result.message || "Data berhasil disimpan! 🎉", "success");
-                    }
-                })
-                .catch(() => showAlert("Gagal menyimpan data!", "danger"));
-        }
-
-        // ⬇️ Render Drafts
-        function renderDrafts() {
-            fetch("{{ route('obat.getTemporary') }}")
-                .then(res => res.json())
-                .then(data => {
-                    const table = document.getElementById("draftTable");
-                    const countBadge = document.getElementById("draftCount");
-                    const btnSaveAll = document.getElementById("btnSaveAll");
-
-                    countBadge.textContent = data.length;
-                    btnSaveAll.disabled = data.length === 0;
-
-                    if (!data.length) {
-                        table.innerHTML = `
-                            <tr><td colspan="3" class="text-center text-muted py-4">
-                                <i class='bi bi-inbox'></i> Belum ada data
-                            </td></tr>`;
-                        return;
-                    }
-
-                    table.innerHTML = data.map(item => {
-                        const stockBadge = (item.stok_minimum && item.stok <= item.stok_minimum) ?
-                            '<span class="badge bg-danger ms-1">Stok Rendah</span>' :
-                            '';
-
-                        return `
-                            <tr>
-                                <td>
-                                    <strong>${item.nama_obat}</strong><br>
-                                    <small class="text-muted">${item.satuan}</small>
-                                </td>
-                                <td>
-                                    ${item.stok} ${stockBadge}
-                                </td>
-                                <td class="text-center">
-                                    <button class="btn btn-info btn-sm" onclick='openDetail(${JSON.stringify(item.id)})' title="Detail">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="btn btn-warning btn-sm" onclick='editDraft(${JSON.stringify(item.id)})' title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" onclick='deleteTemp(${JSON.stringify(item.id)})' title="Hapus">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-                });
-        }
-
-        // ⬇️ Open Detail Modal
-        function openDetail(id) {
-            const modal = new bootstrap.Modal('#detailModal');
-            modal.show();
-
-            fetch(`{{ route('obat.getTemporary') }}?id=${id}`)
-                .then(res => res.json())
-                .then(d => {
-                    const stockStatus = (d.stok_minimum && d.stok <= d.stok_minimum) ?
-                        '<span class="badge bg-danger">Stok Menipis</span>' :
-                        '<span class="badge bg-success">Stok Aman</span>';
-
-                    document.getElementById("modalContent").innerHTML = `
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <h6 class="text-primary fw-bold border-bottom pb-2">
-                                    <i class="bi bi-info-circle me-2"></i>Informasi Obat
-                                </h6>
-                                <table class="table table-sm table-borderless">
-                                    <tr><td width="140"><b>Nama Obat</b></td><td>: ${d.nama_obat}</td></tr>
-                                    <tr><td><b>Satuan</b></td><td>: ${d.satuan}</td></tr>
-                                    <tr><td><b>Stok</b></td><td>: ${d.stok} ${d.satuan}</td></tr>
-                                    <tr><td><b>Status Stok</b></td><td>: ${stockStatus}</td></tr>
-                                </table>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-primary fw-bold border-bottom pb-2">
-                                    <i class="bi bi-cash me-2"></i>Detail Lainnya
-                                </h6>
-                                <table class="table table-sm table-borderless">
-                                    <tr><td width="140"><b>Stok Minimum</b></td><td>: ${d.stok_minimum || '-'}</td></tr>
-                                    <tr><td><b>Harga Satuan</b></td><td>: ${d.harga_satuan ? formatRupiah(d.harga_satuan) : '-'}</td></tr>
-                                    <tr><td><b>Total Nilai</b></td><td>: ${d.harga_satuan ? formatRupiah(d.stok * d.harga_satuan) : '-'}</td></tr>
-                                </table>
-                            </div>
-                        </div>
-
-                        ${d.deskripsi ? `
-                            <div class="mt-3">
-                                <h6 class="fw-bold text-primary border-bottom pb-2">Deskripsi</h6>
-                                <p class="text-muted">${d.deskripsi}</p>
-                            </div>` : ''}
-
-                        <hr>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-warning flex-fill" onclick='editDraft("${d.id}")' data-bs-dismiss="modal">
-                                <i class="bi bi-pencil me-1"></i> Edit
-                            </button>
-                            <button class="btn btn-danger flex-fill" onclick='deleteTemp("${d.id}")'>
-                                <i class="bi bi-trash me-1"></i> Hapus
-                            </button>
-                        </div>
-                    `;
-                });
-        }
-
-        // ⬇️ Edit Draft
-        function editDraft(id) {
-            fetch(`{{ route('obat.getTemporary') }}?id=${id}`)
-                .then(res => res.json())
-                .then(d => {
-                    document.getElementById('edit_id').value = d.id;
-                    document.getElementById('nama_obat').value = d.nama_obat;
-                    document.getElementById('deskripsi').value = d.deskripsi || '';
-                    document.getElementById('stok').value = d.stok;
-                    document.getElementById('satuan').value = d.satuan;
-                    document.getElementById('stok_minimum').value = d.stok_minimum || '';
-                    document.getElementById('harga_satuan').value = d.harga_satuan || '';
-
-                    document.getElementById('btnSubmit').innerHTML =
-                        '<i class="bi bi-check-circle me-1"></i> UPDATE DRAFT';
-                    document.getElementById('btnCancel').style.display = 'block';
-
-                    form.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                    showAlert("Mode edit aktif! Ubah data lalu klik UPDATE DRAFT", "info");
-                });
-        }
-
-        // ⬇️ Cancel Edit
-        function cancelEdit() {
-            form.reset();
-            document.getElementById('edit_id').value = '';
-            document.getElementById('btnSubmit').innerHTML = '<i class="bi bi-plus-circle me-1"></i> TAMBAH KE DRAFT';
-            document.getElementById('btnCancel').style.display = 'none';
-            showAlert("Mode edit dibatalkan", "secondary");
-        }
-
-        // ⬇️ Delete Draft
-        function deleteTemp(id) {
-            if (!confirm('Yakin ingin menghapus draft ini?')) return;
-
-            fetch("{{ route('obat.deleteTemporary') }}", {
-                    method: "DELETE",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector("input[name=_token]").value,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        id
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        renderDrafts();
-                        const modalEl = document.getElementById('detailModal');
-                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                        if (modalInstance) modalInstance.hide();
-                        showAlert("Data berhasil dihapus dari draft 🗑️", "warning");
-                    }
-                })
-                .catch(() => showAlert("Gagal menghapus data!", "danger"));
-        }
-
-        document.addEventListener("DOMContentLoaded", renderDrafts);
-    </script>
 @endsection

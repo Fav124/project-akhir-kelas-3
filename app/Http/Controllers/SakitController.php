@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SakitSantri;
 use App\Models\Santri;
 use App\Models\Obat;
+use App\Models\Diagnosis;
 use Illuminate\Http\Request;
 
 class SakitController extends Controller
@@ -22,13 +23,20 @@ class SakitController extends Controller
         if ($request->ajax()) {
             $query = SakitSantri::with(['santri', 'santri.kelas', 'obats'])->orderBy('tanggal_mulai_sakit', 'desc');
 
+            // Filter Status
+            if ($request->has('filter_status') && !empty($request->filter_status)) {
+                $query->where('status', $request->filter_status);
+            }
+
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
-                $query->whereHas('santri', function($q) use ($search) {
-                    $q->where('nama_lengkap', 'LIKE', "%{$search}%")
-                      ->orWhere('nis', 'LIKE', "%{$search}%");
-                })->orWhere('diagnosis', 'LIKE', "%{$search}%")
-                  ->orWhere('status', 'LIKE', "%{$search}%");
+                $query->where(function($q) use ($search) {
+                    $q->whereHas('santri', function($q) use ($search) {
+                        $q->where('nama_lengkap', 'LIKE', "%{$search}%")
+                          ->orWhere('nis', 'LIKE', "%{$search}%");
+                    })->orWhere('diagnosis', 'LIKE', "%{$search}%")
+                      ->orWhere('status', 'LIKE', "%{$search}%");
+                });
             }
 
             $sakit = $query->paginate(10);
@@ -49,7 +57,8 @@ class SakitController extends Controller
     {
         $santri = Santri::all();
         $obats = Obat::all();
-        return view('sakit.create', compact('santri', 'obats'));
+        $allDiagnoses = Diagnosis::all();
+        return view('sakit.create', compact('santri', 'obats', 'allDiagnoses'));
     }
 
     // ========================
@@ -60,7 +69,6 @@ class SakitController extends Controller
         $request->validate([
             'santri_id' => 'required|exists:santris,id',
             'tanggal_mulai_sakit' => 'required|date',
-            'diagnosis' => 'required|string',
             'gejala' => 'required|string',
             'tindakan' => 'required|string',
             'resep_obat' => 'required|string',
@@ -68,7 +76,8 @@ class SakitController extends Controller
             'status' => 'required|in:sakit,sembuh,kontrol',
             'tanggal_selesai_sakit' => 'nullable|date',
             'catatan' => 'nullable|string',
-            'obat_data' => 'nullable|array'
+            'obat_data' => 'nullable|array',
+            'diagnoses' => 'nullable|array' // Array of names
         ]);
 
         $sessionKey = 'sakit_draft_' . session()->getId();
@@ -121,7 +130,6 @@ class SakitController extends Controller
             'edit_id' => 'required|string',
             'santri_id' => 'required|exists:santris,id',
             'tanggal_mulai_sakit' => 'required|date',
-            'diagnosis' => 'required|string',
             'gejala' => 'required|string',
             'tindakan' => 'required|string',
             'resep_obat' => 'required|string',
@@ -129,7 +137,8 @@ class SakitController extends Controller
             'status' => 'required|in:sakit,sembuh,kontrol',
             'tanggal_selesai_sakit' => 'nullable|date',
             'catatan' => 'nullable|string',
-            'obat_data' => 'nullable|array'
+            'obat_data' => 'nullable|array',
+            'diagnoses' => 'nullable|array'
         ]);
 
         $sessionKey = 'sakit_draft_' . session()->getId();
@@ -192,7 +201,6 @@ class SakitController extends Controller
                 $validated = validator($data, [
                     'santri_id' => 'required|exists:santris,id',
                     'tanggal_mulai_sakit' => 'required|date',
-                    'diagnosis' => 'required|string',
                     'gejala' => 'required|string',
                     'tindakan' => 'required|string',
                     'resep_obat' => 'required|string',
@@ -202,7 +210,23 @@ class SakitController extends Controller
                     'catatan' => 'nullable|string'
                 ])->validate();
 
+                // Store a comma-separated list of diagnoses in the original column for backward compatibility
+                // OR we can leave it empty and rely on the relationship.
+                // Let's store names in 'diagnosis' column just in case.
+                $diagnosesNames = $data['diagnoses'] ?? [];
+                $validated['diagnosis'] = implode(', ', $diagnosesNames);
+
                 $sakit = SakitSantri::create($validated);
+
+                // Sync Diagnoses (Tags)
+                if (!empty($diagnosesNames)) {
+                    $diagnosisIds = [];
+                    foreach ($diagnosesNames as $name) {
+                        $diag = Diagnosis::firstOrCreate(['nama' => trim($name)]);
+                        $diagnosisIds[] = $diag->id;
+                    }
+                    $sakit->diagnoses()->sync($diagnosisIds);
+                }
 
                 // Simpan obat jika ada
                 if (isset($data['obat_data']) && is_array($data['obat_data'])) {
@@ -260,7 +284,7 @@ class SakitController extends Controller
     {
         $santri = Santri::all();
         $obats = Obat::all();
-        $sakit->load(['santri', 'obats']);
+        $sakit->load(['santri', 'obats', 'diagnoses']);
         return view('sakit.edit', compact('sakit', 'santri', 'obats'));
     }
 
@@ -281,19 +305,32 @@ class SakitController extends Controller
         $request->validate([
             'santri_id' => 'required|exists:santris,id',
             'tanggal_mulai_sakit' => 'required|date',
-            'diagnosis' => 'required|string',
             'gejala' => 'required|string',
             'tindakan' => 'required|string',
             'resep_obat' => 'required|string',
             'suhu_tubuh' => 'nullable|numeric',
             'status' => 'required|in:sakit,sembuh,kontrol',
             'tanggal_selesai_sakit' => 'nullable|date',
-            'catatan' => 'nullable|string'
+            'catatan' => 'nullable|string',
+            'diagnoses' => 'nullable|array'
         ]);
 
-        $sakit->update($request->all());
+        $data = $request->all();
+        $diagnosesNames = $request->input('diagnoses', []);
+        $data['diagnosis'] = implode(', ', $diagnosesNames); // Store a comma-separated list of diagnoses in the original column for backward compatibility
 
-        return redirect()->route('sakit.index')->with('success', 'Data sakit santri berhasil diperbarui');
+        $sakit->update($data);
+
+        // Sync Diagnoses (Tags)
+        $diagnosisIds = [];
+        foreach ($diagnosesNames as $name) {
+            $diag = Diagnosis::firstOrCreate(['nama' => trim($name)]);
+            $diagnosisIds[] = $diag->id;
+        }
+        $sakit->diagnoses()->sync($diagnosisIds);
+
+        return redirect()->route('sakit.index')
+            ->with('success', 'Data sakit berhasil diperbarui!');
     }
 
     // ========================
