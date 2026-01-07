@@ -47,7 +47,9 @@ class SakitController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(10);
 
-        return view('sakit.index', compact('sakit'));
+        $obats = Obat::all();
+
+        return view('sakit.index', compact('sakit', 'obats'));
     }
 
     // ========================
@@ -417,6 +419,64 @@ class SakitController extends Controller
         Santri::find($sakit->santri_id)->update(['status' => 'sehat']);
 
         return redirect()->route('sakit.index')->with('success', 'Status santri berhasil diperbarui menjadi sembuh');
+    }
+
+    // ========================
+    // 📍 GET MEDICINES (JSON)
+    // ========================
+    public function getMedicines(SakitSantri $sakit)
+    {
+        return response()->json($sakit->obats()->get()->map(function($obat) {
+            return [
+                'obat_id' => $obat->id,
+                'nama_obat' => $obat->nama_obat,
+                'satuan' => $obat->satuan,
+                'jumlah' => $obat->pivot->jumlah,
+                'dosis' => $obat->pivot->dosis,
+                'keterangan' => $obat->pivot->keterangan
+            ];
+        }));
+    }
+
+    // ========================
+    // 📍 SYNC MEDICINES
+    // ========================
+    public function syncMedicines(Request $request, SakitSantri $sakit)
+    {
+        $request->validate([
+            'obat_data' => 'nullable|array'
+        ]);
+
+        // 1. Restore previous stock and usage counts
+        foreach ($sakit->obats as $oldObat) {
+            $oldObat->restoreStock($oldObat->pivot->jumlah);
+        }
+
+        // 2. Sync Medicines and deduct new stock
+        $medicines = [];
+        if ($request->has('obat_data')) {
+            foreach ($request->input('obat_data') as $item) {
+                if (!empty($item['obat_id'])) {
+                    $medicines[$item['obat_id']] = [
+                        'jumlah' => $item['jumlah'] ?? 0,
+                        'dosis' => $item['dosis'] ?? null,
+                        'keterangan' => $item['keterangan'] ?? null,
+                    ];
+                    
+                    // Deduct new stock
+                    $newObat = Obat::find($item['obat_id']);
+                    if ($newObat) {
+                        $newObat->reduceStock($item['jumlah'] ?? 0);
+                    }
+                }
+            }
+        }
+        $sakit->obats()->sync($medicines);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data obat berhasil diperbarui!'
+        ]);
     }
 
     // ========================

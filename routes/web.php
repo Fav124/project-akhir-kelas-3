@@ -139,6 +139,11 @@ Route::prefix('sakit')->name('sakit.')->group(function () {
     Route::get('/{sakit}', [SakitController::class, 'show'])->name('show');
     // Mark as recovered
     Route::put('/{sakit}/sembuh', [SakitController::class, 'markRecovered'])->name('sembuh');
+    
+    // Quick Medicine Routes
+    Route::get('/{sakit}/medicines', [SakitController::class, 'getMedicines'])->name('getMedicines');
+    Route::post('/{sakit}/medicines', [SakitController::class, 'syncMedicines'])->name('syncMedicines');
+
     Route::delete('/{sakit}', [SakitController::class, 'destroy'])->name('destroy');
 });
 
