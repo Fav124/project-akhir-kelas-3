@@ -225,35 +225,6 @@
 
 
     <script>
-        function showAlert(message, type = "success") {
-            const box = document.getElementById("alertBox");
-            const id = "alert-" + Date.now();
-            const bgClass = {
-                'success': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700',
-                'danger': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700',
-                'info': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700',
-                'warning': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700',
-                'secondary': 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-            }[type] || '';
-
-            const alert = `
-                <div id="${id}" class="p-4 border rounded-lg shadow-sm ${bgClass} flex items-start gap-3 animate-in slide-in-from-top">
-                    <span class="material-symbols-outlined flex-shrink-0 mt-0.5">
-                        ${type === 'success' ? 'check_circle' : type === 'danger' ? 'error' : type === 'info' ? 'info' : type === 'warning' ? 'warning' : 'check'}
-                    </span>
-                    <p class="flex-1 text-sm font-medium">${message}</p>
-                    <button type="button" onclick="document.getElementById('${id}').remove()" class="flex-shrink-0 opacity-70 hover:opacity-100">
-                        <span class="material-symbols-outlined text-lg">close</span>
-                    </button>
-                </div>
-            `;
-            box.insertAdjacentHTML("beforeend", alert);
-
-            setTimeout(() => {
-                const el = document.getElementById(id);
-                if (el) el.remove();
-            }, 3500);
-        }
 
         const form = document.getElementById('formSantri');
         const fotoInput = document.getElementById('foto');

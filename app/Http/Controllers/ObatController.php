@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Obat;
 use Illuminate\Http\Request;
+use App\Traits\InteractsWithDrafts;
 
 class ObatController extends Controller
 {
+    use InteractsWithDrafts;
     public function __construct()
     {
         $this->middleware('auth');
@@ -84,9 +86,6 @@ class ObatController extends Controller
             'foto' => 'nullable|image|max:5120'
         ]);
 
-        $sessionKey = 'obat_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
         // Handle photo upload
         $fotoPath = null;
         if ($request->hasFile('foto')) {
@@ -95,11 +94,8 @@ class ObatController extends Controller
 
         $newData = $request->except(['foto']);
         $newData['foto'] = $fotoPath;
-        $newData['id'] = uniqid('obat_');
-        $newData['created_at'] = now()->toDateTimeString();
 
-        $drafts[] = $newData;
-        session()->put($sessionKey, $drafts);
+        $this->storeDraft('obat', $newData);
 
         return response()->json([
             'success' => true,
@@ -112,12 +108,8 @@ class ObatController extends Controller
     // ========================
     public function getTemporary(Request $request)
     {
-        $sessionKey = 'obat_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
         if ($request->has('id')) {
-            $id = $request->get('id');
-            $item = collect($drafts)->firstWhere('id', $id);
+            $item = $this->findDraft('obat', $request->get('id'));
 
             if (!$item) {
                 return response()->json(['error' => 'Data tidak ditemukan'], 404);
@@ -126,7 +118,7 @@ class ObatController extends Controller
             return response()->json($item);
         }
 
-        return response()->json($drafts);
+        return response()->json($this->getDrafts('obat'));
     }
 
     // ========================
@@ -146,29 +138,25 @@ class ObatController extends Controller
             'foto' => 'nullable|image|max:5120'
         ]);
 
-        $sessionKey = 'obat_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
         $editId = $request->input('edit_id');
+        $item = $this->findDraft('obat', $editId);
 
-        $drafts = collect($drafts)->map(function ($item) use ($editId, $request) {
-            if ($item['id'] === $editId) {
-                $fotoPath = $item['foto'];
-                if ($request->hasFile('foto')) {
-                    // Delete old photo from storage if exists in draft
-                    \App\Helpers\PhotoHelper::delete($item['foto']);
-                    $fotoPath = \App\Helpers\PhotoHelper::store($request->file('foto'), 'obats');
-                }
+        if (!$item) {
+            return response()->json(['error' => 'Draft tidak ditemukan'], 404);
+        }
 
-                return array_merge($item, $request->except(['_token', 'edit_id', 'foto']), [
-                    'foto' => $fotoPath,
-                    'updated_at' => now()->toDateTimeString()
-                ]);
+        $fotoPath = $item['foto'] ?? null;
+        if ($request->hasFile('foto')) {
+            if ($fotoPath) {
+                \App\Helpers\PhotoHelper::delete($fotoPath);
             }
-            return $item;
-        })->all();
+            $fotoPath = \App\Helpers\PhotoHelper::store($request->file('foto'), 'obats');
+        }
 
-        session()->put($sessionKey, $drafts);
+        $updateData = $request->except(['_token', 'edit_id', 'foto']);
+        $updateData['foto'] = $fotoPath;
+
+        $this->updateDraft('obat', $editId, $updateData);
 
         return response()->json([
             'success' => true,
@@ -181,17 +169,7 @@ class ObatController extends Controller
     // ========================
     public function deleteTemporary(Request $request)
     {
-        $sessionKey = 'obat_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
-        $id = $request->input('id');
-
-        $drafts = collect($drafts)->reject(function ($item) use ($id) {
-            return $item['id'] === $id;
-        })->values()->all();
-
-        session()->put($sessionKey, $drafts);
-
+        $this->deleteDraft('obat', $request->input('id'));
         return response()->json(['success' => true]);
     }
 
@@ -201,8 +179,7 @@ class ObatController extends Controller
     public function saveAll()
     {
         try {
-            $sessionKey = 'obat_draft_' . session()->getId();
-            $drafts = session()->get($sessionKey, []);
+            $drafts = $this->getDrafts('obat');
 
             if (empty($drafts)) {
                 return back()->with('error', 'Tidak ada draft untuk disimpan.');
@@ -226,7 +203,7 @@ class ObatController extends Controller
                 $savedCount++;
             }
 
-            session()->forget($sessionKey);
+            $this->clearDrafts('obat');
 
             return redirect()->route('obat.index')
                 ->with('success', "Berhasil menyimpan {$savedCount} data obat ke database! 🎉");

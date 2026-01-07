@@ -7,9 +7,11 @@ use App\Models\Santri;
 use App\Models\Obat;
 use App\Models\Diagnosis;
 use Illuminate\Http\Request;
+use App\Traits\InteractsWithDrafts;
 
 class SakitController extends Controller
 {
+    use InteractsWithDrafts;
     public function __construct()
     {
         $this->middleware('auth');
@@ -83,15 +85,7 @@ class SakitController extends Controller
             'diagnoses' => 'nullable|array' // Array of names
         ]);
 
-        $sessionKey = 'sakit_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
-        $newData = $request->all();
-        $newData['id'] = uniqid('sakit_');
-        $newData['created_at'] = now()->toDateTimeString();
-
-        $drafts[] = $newData;
-        session()->put($sessionKey, $drafts);
+        $this->storeDraft('sakit', $request->all());
 
         return response()->json([
             'success' => true,
@@ -104,12 +98,8 @@ class SakitController extends Controller
     // ========================
     public function getTemporary(Request $request)
     {
-        $sessionKey = 'sakit_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
         if ($request->has('id')) {
-            $id = $request->get('id');
-            $item = collect($drafts)->firstWhere('id', $id);
+            $item = $this->findDraft('sakit', $request->get('id'));
 
             if (!$item) {
                 return response()->json(['error' => 'Data tidak ditemukan'], 404);
@@ -121,7 +111,7 @@ class SakitController extends Controller
             return response()->json($item);
         }
 
-        return response()->json($drafts);
+        return response()->json($this->getDrafts('sakit'));
     }
 
     // ========================
@@ -144,21 +134,7 @@ class SakitController extends Controller
             'diagnoses' => 'nullable|array'
         ]);
 
-        $sessionKey = 'sakit_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
-        $editId = $request->input('edit_id');
-
-        $drafts = collect($drafts)->map(function ($item) use ($editId, $request) {
-            if ($item['id'] === $editId) {
-                return array_merge($item, $request->except(['_token', 'edit_id']), [
-                    'updated_at' => now()->toDateTimeString()
-                ]);
-            }
-            return $item;
-        })->all();
-
-        session()->put($sessionKey, $drafts);
+        $this->updateDraft('sakit', $request->input('edit_id'), $request->except(['_token', 'edit_id']));
 
         return response()->json([
             'success' => true,
@@ -171,17 +147,7 @@ class SakitController extends Controller
     // ========================
     public function deleteTemporary(Request $request)
     {
-        $sessionKey = 'sakit_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
-        $id = $request->input('id');
-
-        $drafts = collect($drafts)->reject(function ($item) use ($id) {
-            return $item['id'] === $id;
-        })->values()->all();
-
-        session()->put($sessionKey, $drafts);
-
+        $this->deleteDraft('sakit', $request->input('id'));
         return response()->json(['success' => true]);
     }
 
@@ -191,8 +157,7 @@ class SakitController extends Controller
     public function saveAll()
     {
         try {
-            $sessionKey = 'sakit_draft_' . session()->getId();
-            $drafts = session()->get($sessionKey, []);
+            $drafts = $this->getDrafts('sakit');
 
             if (empty($drafts)) {
                 return back()->with('error', 'Tidak ada draft untuk disimpan.');
@@ -213,9 +178,6 @@ class SakitController extends Controller
                     'catatan' => 'nullable|string'
                 ])->validate();
 
-                // Store a comma-separated list of diagnoses in the original column for backward compatibility
-                // OR we can leave it empty and rely on the relationship.
-                // Let's store names in 'diagnosis' column just in case.
                 $diagnosesNames = $data['diagnoses'] ?? [];
                 $validated['diagnosis'] = implode(', ', $diagnosesNames);
 
@@ -231,23 +193,20 @@ class SakitController extends Controller
                     $sakit->diagnoses()->sync($diagnosisIds);
                 }
 
-                // Simpan obat jika ada
-            // Simpan obat jika ada
-            $medicineData = $this->prepareMedicineData($data['obat_data'] ?? []);
-            foreach ($medicineData as $obatId => $pivot) {
-                $sakit->obats()->attach($obatId, $pivot);
+                $medicineData = $this->prepareMedicineData($data['obat_data'] ?? []);
+                foreach ($medicineData as $obatId => $pivot) {
+                    $sakit->obats()->attach($obatId, $pivot);
 
-                // Deduct stock
-                $obat = Obat::find($obatId);
-                if ($obat) {
-                    $obat->reduceStock($pivot['jumlah']);
+                    $obat = Obat::find($obatId);
+                    if ($obat) {
+                        $obat->reduceStock($pivot['jumlah']);
+                    }
                 }
-            }
 
                 $savedCount++;
             }
 
-            session()->forget($sessionKey);
+            $this->clearDrafts('sakit');
 
             return redirect()->route('sakit.index')
                 ->with('success', "Berhasil menyimpan {$savedCount} data sakit santri ke database! 🎉");

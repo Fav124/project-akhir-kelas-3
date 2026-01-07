@@ -7,9 +7,11 @@ use App\Models\WaliSantri;
 use App\Models\Kelas;
 use App\Helpers\PhotoHelper;
 use Illuminate\Http\Request;
+use App\Traits\InteractsWithDrafts;
 
 class SantriController extends Controller
 {
+    use InteractsWithDrafts;
     public function __construct()
     {
         $this->middleware('auth');
@@ -156,26 +158,16 @@ class SantriController extends Controller
             'foto' => 'nullable|image|max:5120'
         ]);
 
-        // Ambil data yang sudah ada
-        $sessionKey = 'santri_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
         // Handle photo upload
         $fotoPath = null;
         if ($request->hasFile('foto')) {
             $fotoPath = PhotoHelper::store($request->file('foto'), 'santris');
         }
 
-        // Tambahkan data baru dengan ID unik
         $newData = $request->except('foto');
         $newData['foto'] = $fotoPath;
-        $newData['id'] = uniqid('santri_'); // Generate unique ID
-        $newData['created_at'] = now()->toDateTimeString();
 
-        $drafts[] = $newData;
-
-        // Simpan kembali ke session
-        session()->put($sessionKey, $drafts);
+        $this->storeDraft('santri', $newData);
 
         return response()->json([
             'success' => true,
@@ -188,13 +180,8 @@ class SantriController extends Controller
     // ========================
     public function getTemporary(Request $request)
     {
-        $sessionKey = 'santri_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
-        // Jika ada parameter ID, return detail satu item
         if ($request->has('id')) {
-            $id = $request->get('id');
-            $item = collect($drafts)->firstWhere('id', $id);
+            $item = $this->findDraft('santri', $request->get('id'));
 
             if (!$item) {
                 return response()->json(['error' => 'Data tidak ditemukan'], 404);
@@ -203,8 +190,7 @@ class SantriController extends Controller
             return response()->json($item);
         }
 
-        // Return semua draft
-        return response()->json($drafts);
+        return response()->json($this->getDrafts('santri'));
     }
 
     // ========================
@@ -212,18 +198,7 @@ class SantriController extends Controller
     // ========================
     public function deleteTemporary(Request $request)
     {
-        $sessionKey = 'santri_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
-        $id = $request->input('id');
-
-        // Filter out item yang mau dihapus
-        $drafts = collect($drafts)->reject(function ($item) use ($id) {
-            return $item['id'] === $id;
-        })->values()->all();
-
-        session()->put($sessionKey, $drafts);
-
+        $this->deleteDraft('santri', $request->input('id'));
         return response()->json(['success' => true]);
     }
 
@@ -233,8 +208,7 @@ class SantriController extends Controller
     public function saveAll()
     {
         try {
-            $sessionKey = 'santri_draft_' . session()->getId();
-            $drafts = session()->get($sessionKey, []);
+            $drafts = $this->getDrafts('santri');
 
             if (empty($drafts)) {
                 return back()->with('error', 'Tidak ada draft untuk disimpan.');
@@ -288,7 +262,7 @@ class SantriController extends Controller
             }
 
             // Hapus semua draft setelah berhasil
-            session()->forget($sessionKey);
+            $this->clearDrafts('santri');
 
             return redirect()->route('santri.index')
                 ->with('success', "Berhasil menyimpan {$savedCount} data santri ke database! 🎉");
@@ -451,22 +425,7 @@ class SantriController extends Controller
             'alamat' => 'required|string'
         ]);
 
-        $sessionKey = 'santri_draft_' . session()->getId();
-        $drafts = session()->get($sessionKey, []);
-
-        $editId = $request->input('edit_id');
-
-        // Cari dan update item
-        $drafts = collect($drafts)->map(function ($item) use ($editId, $request) {
-            if ($item['id'] === $editId) {
-                return array_merge($item, $request->except(['_token', 'edit_id']), [
-                    'updated_at' => now()->toDateTimeString()
-                ]);
-            }
-            return $item;
-        })->all();
-
-        session()->put($sessionKey, $drafts);
+        $this->updateDraft('santri', $request->input('edit_id'), $request->except(['_token', 'edit_id']));
 
         return response()->json([
             'success' => true,
